@@ -5,12 +5,16 @@ import {
 } from "recharts";
 import * as XLSX from "xlsx";
 import { supabase } from "./lib/supabase";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 /* ─── FONTS ─────────────────────────────────────────────────────────────── */
 const fl = document.createElement("link");
 fl.rel = "stylesheet";
 fl.href = "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap";
 document.head.appendChild(fl);
+
+
 
 /* ─── PALETTE "CUIDADO INTEGRAL" ──────────────────────────────────────── */
 const T = {
@@ -176,6 +180,7 @@ const Badge=({text,color="#999"})=><span style={{
   fontSize:11, fontWeight:700, letterSpacing:"0.03em", whiteSpace:"nowrap",
   display:"inline-block"
 }}>{text}</span>;
+
 
 const estadoBadge = e => {
   const m = {
@@ -910,7 +915,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+  const [isExporting, setIsExporting] = useState(false);
   const [view, setView] = useState("dashboard");
   const [beneficiaries, setPatients] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -1331,6 +1336,251 @@ export default function App() {
     ]), "Estadísticas");
     XLSX.writeFile(wb, `crescendo_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
+  // ─── ExportPDF ──────────────────────────────────────────────────────────
+  const pdfContentRef = useRef(null);
+
+  const renderPDFContent = () => {
+    if (!detailPat) return null;
+    
+    const p = beneficiaries.find(x => x.id === detailPat.id) || detailPat;
+    const patFu = followups.filter(f => f.beneficiarioId === p.id);
+    const patDon = donations.filter(d => d.beneficiarioId === p.id);
+    const patProj = projects.filter(pr => pr.beneficiarios && pr.beneficiarios.includes(p.id));
+
+    return (
+      <div ref={pdfContentRef} style={{
+        padding: '40px',
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        background: '#FFFFFF',
+        color: '#1E3D3D',
+        maxWidth: '800px',
+        margin: '0 auto'
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          borderBottom: '3px solid #2C7A7B',
+          paddingBottom: '20px',
+          marginBottom: '24px'
+        }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            background: 'linear-gradient(135deg, #2C7A7B, #E8A87C)',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            color: '#fff'
+          }}>🌿</div>
+          <div>
+            <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: "'Fraunces', serif", color: '#2C7A7B' }}>
+              Fundación Crescendo
+            </div>
+            <div style={{ fontSize: '12px', color: '#6B7A7A', fontWeight: 500, letterSpacing: '0.5px' }}>
+              INFORME DE BENEFICIARIO
+            </div>
+          </div>
+          <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+            <div style={{ fontSize: '11px', color: '#6B7A7A' }}>Fecha de emisión</div>
+            <div style={{ fontSize: '12px', fontWeight: 600 }}>{new Date().toLocaleDateString('es-CL')}</div>
+          </div>
+        </div>
+
+        {/* Información personal */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '28px' }}>
+          <div>
+            <div style={{ fontSize: '26px', fontWeight: 700, fontFamily: "'Fraunces', serif", color: '#1E3D3D' }}>
+              {p.nombre} {p.apellido}
+            </div>
+            <div style={{ fontSize: '14px', color: '#5A6B6B', marginTop: '4px' }}>
+              {edad(p.fecha_nac)} años · {fmtD(p.fecha_nac)}
+            </div>
+            <div style={{ marginTop: '8px' }}>
+              <span style={{
+                background: p.estado === 'Activo' ? '#6BBF8A' : '#E5989B',
+                color: '#fff',
+                padding: '4px 14px',
+                borderRadius: '20px',
+                fontSize: '12px',
+                fontWeight: 700,
+                display: 'inline-block'
+              }}>{p.estado}</span>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '13px' }}>
+            <div><span style={{ color: '#6B7A7A' }}>Diagnóstico:</span> <strong>{p.diagnostico}</strong></div>
+            <div><span style={{ color: '#6B7A7A' }}>Condición:</span> <strong>{p.condicion}</strong></div>
+            <div><span style={{ color: '#6B7A7A' }}>Nivel:</span> <strong>{p.nivel}</strong></div>
+            <div><span style={{ color: '#6B7A7A' }}>Teléfono:</span> <strong>{p.telefono || '–'}</strong></div>
+            <div style={{ gridColumn: 'span 2' }}><span style={{ color: '#6B7A7A' }}>Email:</span> <strong>{p.email || '–'}</strong></div>
+            <div style={{ gridColumn: 'span 2' }}><span style={{ color: '#6B7A7A' }}>Dirección:</span> <strong>{p.direccion || '–'}</strong></div>
+          </div>
+        </div>
+
+        {/* Tutor */}
+        <div style={{
+          background: '#F4F7F6',
+          borderRadius: '12px',
+          padding: '16px 20px',
+          marginBottom: '24px'
+        }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: '#6B7A7A', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
+            Tutor / Representante
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: 600 }}>{p.tutor}</div>
+          <div style={{ fontSize: '13px', color: '#5A6B6B' }}>{p.relacionTutor} · {p.telefonoTutor}</div>
+          {p.notas && <div style={{ fontSize: '13px', marginTop: '6px', color: '#5A6B6B' }}>📝 {p.notas}</div>}
+        </div>
+
+        {/* Seguimientos */}
+        {patFu.length > 0 && (
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{
+              fontSize: '16px',
+              fontWeight: 700,
+              color: '#2C7A7B',
+              borderBottom: '2px solid #E8F0EF',
+              paddingBottom: '8px',
+              marginBottom: '12px'
+            }}>
+              Seguimientos ({patFu.length})
+            </div>
+            {patFu.sort((a, b) => b.fecha.localeCompare(a.fecha)).map(f => {
+              const tc = { Médico: '#A8DADC', Terapia: '#6BBF8A', Educativo: '#E8A87C', Social: '#B39DDB', Psicológico: '#80CBC4' }[f.tipo] || '#2C7A7B';
+              return (
+                <div key={f.id} style={{
+                  display: 'flex',
+                  gap: '12px',
+                  padding: '12px 0',
+                  borderBottom: '1px solid #E8F0EF'
+                }}>
+                  <div style={{
+                    width: '4px',
+                    background: tc,
+                    borderRadius: '4px',
+                    flexShrink: 0
+                  }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <span style={{
+                        background: tc,
+                        color: '#fff',
+                        padding: '2px 10px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: 700
+                      }}>{f.tipo}</span>
+                      <span style={{ fontSize: '12px', color: '#6B7A6B' }}>{fmtD(f.fecha)}</span>
+                      <span style={{
+                        background: f.resultado === 'Positivo' ? '#6BBF8A' : f.resultado === 'Neutral' ? '#D4B86A' : '#E5989B',
+                        color: '#fff',
+                        padding: '2px 10px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: 700
+                      }}>{f.resultado}</span>
+                    </div>
+                    <div style={{ fontSize: '13px', marginTop: '4px' }}>{f.descripcion}</div>
+                    <div style={{ fontSize: '12px', color: '#6B7A6B', marginTop: '2px' }}>
+                      {f.profesional} · Próx: {fmtD(f.proxima)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{
+          marginTop: '32px',
+          paddingTop: '16px',
+          borderTop: '1px solid #E8F0EF',
+          fontSize: '11px',
+          color: '#8FA3A3',
+          textAlign: 'center'
+        }}>
+          Documento generado desde el Sistema de Gestión Fundación Crescendo · {new Date().toLocaleString('es-CL')}
+        </div>
+      </div>
+    );
+  };
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  const exportPDF = async () => {
+  if (!detailPat) return;
+  
+  try {
+    // Esperar un momento para que el contenido oculto se renderice
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const element = pdfContentRef.current;
+    if (!element) {
+      alert('Error: No se pudo generar el PDF');
+      return;
+    }
+    
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#FFFFFF',
+      logging: false
+    });
+    
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    
+    // Si el contenido es más alto que una página, ajustamos
+    if (pdfHeight > pdf.internal.pageSize.getHeight()) {
+      // Para contenido largo, podemos usar varias páginas o escalar
+      // Por simplicidad, escalamos para que quepa en una página
+      const scaleFactor = pdf.internal.pageSize.getHeight() / pdfHeight;
+      const newWidth = pdfWidth * scaleFactor;
+      const newHeight = pdf.internal.pageSize.getHeight();
+      pdf.addImage(imgData, 'PNG', (pdfWidth - newWidth) / 2, 0, newWidth, newHeight);
+    } else {
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    }
+    
+    pdf.save(`perfil_${detailPat.nombre}_${detailPat.apellido}.pdf`);
+  } catch (error) {
+    console.error('Error al generar PDF:', error);
+    alert('Error al generar el PDF. Inténtalo de nuevo.');
+  }
+};
 
   // ─── UseMemo ──────────────────────────────────────────────────────────
   const discData = useMemo(() => {
@@ -1610,6 +1860,7 @@ export default function App() {
               {view === "projects" && can(currentUser, "projects_add") && <Btn onClick={() => setProjModal("new")} icon="＋">Nuevo Proyecto</Btn>}
               {view === "followups" && can(currentUser, "followups_add") && <Btn onClick={() => setFuModal("new")} icon="＋">Nuevo Seguimiento</Btn>}
               {can(currentUser, "export") && <Btn variant="gold" onClick={exportExcel} sm icon="📥">Excel</Btn>}
+              {detailPat && can(currentUser, "patients_view") && (<Btn variant="accent" onClick={exportPDF} sm icon="📄">PDF</Btn>)}
               <button onClick={() => setShowProfile(p => !p)} style={{
                 display: "flex", alignItems: "center", gap: 8,
                 background: T.bgSoft, border: `1px solid ${T.border}`,
@@ -1832,7 +2083,7 @@ export default function App() {
               return (
                 <div style={{ animation: "fadeUp 0.25s ease" }}>
                   <button onClick={() => setDetailPat(null)} style={{ background: "none", border: "none", cursor: "pointer", color: T.primary, fontWeight: 600, fontSize: 13, marginBottom: 22, display: "flex", alignItems: "center", gap: 6 }}>← Volver a Beneficiarios</button>
-                  <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20 }}>
+                  <div id="perfil-beneficiario" style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20 }}>
                     <div>
                       <Card style={{ padding: 24, marginBottom: 16 }}>
                         <div style={{ textAlign: "center", marginBottom: 20 }}>
@@ -1854,7 +2105,13 @@ export default function App() {
                         </div>
                         {p.notas && <div style={{ marginTop: 12, padding: 12, background: T.accent + "10", borderRadius: 10, fontSize: 12, borderLeft: `3px solid ${T.accent}` }}>{p.notas}</div>}
                         {(can(currentUser, "patients_edit") || can(currentUser, "patients_del")) && (
-                          <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+                          <div style={{ 
+                            marginTop: 16, 
+                            display: "flex", 
+                            gap: 8, 
+                            flexWrap: "wrap",
+                            visibility: isExporting ? "hidden" : "visible" 
+                          }}>
                             {can(currentUser, "patients_edit") && <Btn sm onClick={() => setPatModal(p)} icon="✏️">Editar</Btn>}
                             {can(currentUser, "patients_del") && <Btn sm variant="danger" onClick={() => delPat(p.id)} icon="🗑">Eliminar</Btn>}
                           </div>
@@ -2220,6 +2477,10 @@ export default function App() {
         </Modal>
       )}
       {importModal && <ImportModal onClose={() => setImportModal(false)} onImport={handleImport} />}
+      {/* ─── CONTENEDOR OCULTO PARA PDF ───────────────────────────── */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', zIndex: -999, width: '800px' }}>
+        {renderPDFContent()}
+      </div>
     </>
   );
 }
