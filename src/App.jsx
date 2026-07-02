@@ -264,7 +264,7 @@ const Field = ({label,children,span=2,hint}) => (
 );
 
 /* ─── FORMS ──────────────────────────────────────────────────────────────── */
-const EPAT={nombre:"",apellido:"",fecha_nac:"",diagnostico:"",discapacidad:"Intelectual",nivel:"Leve",telefono:"",email:"",direccion:"",tutor:"",relacionTutor:"Madre",telefonoTutor:"",fecha_ingreso:new Date().toISOString().slice(0,10),estado:"Activo",notas:""};
+const EPAT={nombre:"",apellido:"",fecha_nac:"",diagnostico:"",condicion:"Intelectual",nivel:"Leve",telefono:"",email:"",direccion:"",tutor:"",relacionTutor:"Madre",telefonoTutor:"",fecha_ingreso:new Date().toISOString().slice(0,10),estado:"Activo",notas:""};
 const PatientForm=({init,onSave,onClose})=>{
   const[f,sf]=useState(init||EPAT);
   const s=k=>e=>sf(p=>({...p,[k]:e.target.value}));
@@ -274,7 +274,7 @@ const PatientForm=({init,onSave,onClose})=>{
       <Field label="Apellido" span={1}><input value={f.apellido} onChange={s("apellido")}/></Field>
       <Field label="Fecha de Nacimiento" span={1}><input type="date" value={f.fecha_nac} onChange={s("fecha_nac")}/></Field>
       <Field label="Diagnóstico" span={1}><input value={f.diagnostico} onChange={s("diagnostico")}/></Field>
-      <Field label="Tipo de Discapacidad" span={1}><select value={f.discapacidad} onChange={s("discapacidad")}>{["Intelectual","Física","Sensorial","Cognitiva","Múltiple","Otra"].map(o=><option key={o}>{o}</option>)}</select></Field>
+      <Field label="Tipo de Condicion" span={1}><select value={f.condicion} onChange={s("condicion")}>{["Intelectual","Física","Sensorial","Cognitiva","Múltiple","Otra"].map(o=><option key={o}>{o}</option>)}</select></Field>
       <Field label="Nivel de Apoyo" span={1}><select value={f.nivel} onChange={s("nivel")}>{["Leve","Moderado","Severo"].map(o=><option key={o}>{o}</option>)}</select></Field>
       <Field label="Teléfono" span={1}><input value={f.telefono} onChange={s("telefono")}/></Field>
       <Field label="Email (opcional)" span={1}><input value={f.email} onChange={s("email")}/></Field>
@@ -289,21 +289,21 @@ const PatientForm=({init,onSave,onClose})=>{
       <Field label="Notas / Observaciones"><textarea value={f.notas} onChange={s("notas")}/></Field>
       <div style={{gridColumn:"span 2",display:"flex",gap:10,justifyContent:"flex-end",marginTop:4}}>
         <Btn variant="ghost" onClick={onClose}>Cancelar</Btn>
-        <Btn onClick={()=>onSave(f)}>Guardar Paciente</Btn>
+        <Btn onClick={()=>onSave(f)}>Guardar Beneficiario</Btn>
       </div>
     </div>
   );
 };
 
-const EDON={donante:"",relacion:"Familiar",pacienteId:"",monto:"",fecha:new Date().toISOString().slice(0,10),tipo:"Transferencia",proyectoId:"",notas:""};
-const DonationForm=({onSave,onClose,patients,projects})=>{
+const EDON={donante:"",relacion:"Familiar",beneficiarioId:"",monto:"",fecha:new Date().toISOString().slice(0,10),tipo:"Transferencia",proyectoId:"",notas:""};
+const DonationForm=({onSave,onClose,beneficiaries,projects})=>{
   const[f,sf]=useState(EDON);
   const s=k=>e=>sf(p=>({...p,[k]:e.target.value}));
   return(
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
       <Field label="Nombre del Donante"><input value={f.donante} onChange={s("donante")}/></Field>
       <Field label="Tipo de Relación" span={1}><select value={f.relacion} onChange={s("relacion")}>{["Familiar","Externo","Corporativo","Anónimo"].map(o=><option key={o}>{o}</option>)}</select></Field>
-      <Field label="Paciente Relacionado" span={1}><select value={f.pacienteId} onChange={s("pacienteId")}><option value="">Sin paciente específico</option>{patients.map(p=><option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>)}</select></Field>
+      <Field label="Beneficiario Relacionado" span={1}><select value={f.beneficiarioId} onChange={s("beneficiarioId")}><option value="">Sin beneficiario específico</option>{beneficiaries.map(p=><option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>)}</select></Field>
       <Field label="Monto ($)" span={1}><input type="number" value={f.monto} onChange={s("monto")}/></Field>
       <Field label="Fecha" span={1}><input type="date" value={f.fecha} onChange={s("fecha")}/></Field>
       <Field label="Tipo de Pago" span={1}><select value={f.tipo} onChange={s("tipo")}>{["Transferencia","Efectivo","Cheque","Tarjeta","Especie"].map(o=><option key={o}>{o}</option>)}</select></Field>
@@ -311,14 +311,14 @@ const DonationForm=({onSave,onClose,patients,projects})=>{
       <Field label="Notas" span={1}><textarea value={f.notas} onChange={s("notas")} style={{minHeight:60}}/></Field>
       <div style={{gridColumn:"span 2",display:"flex",gap:10,justifyContent:"flex-end"}}>
         <Btn variant="ghost" onClick={onClose}>Cancelar</Btn>
-        <Btn variant="accent" onClick={()=>onSave({...f,monto:parseFloat(f.monto)||0,pacienteId:f.pacienteId?parseInt(f.pacienteId):null,proyectoId:f.proyectoId?parseInt(f.proyectoId):null})}>Registrar Donación</Btn>
+        <Btn variant="accent" onClick={()=>onSave({...f,monto:parseFloat(f.monto)||0,beneficiarioId:f.beneficiarioId?parseInt(f.beneficiarioId):null,proyectoId:f.proyectoId?parseInt(f.proyectoId):null})}>Registrar Donación</Btn>
       </div>
     </div>
   );
 };
 
 const EPROJ={nombre:"",descripcion:"",objetivo:"",recaudado:"0",inicio:new Date().toISOString().slice(0,10),fin:"",estado:"Planificado",beneficiarios:[]};
-const ProjectForm=({init,onSave,onClose,patients})=>{
+const ProjectForm=({init,onSave,onClose,beneficiaries})=>{
   const[f,sf]=useState(init||EPROJ);
   const s=k=>e=>sf(p=>({...p,[k]:e.target.value}));
   const tog=id=>sf(p=>({...p,beneficiarios:p.beneficiarios.includes(id)?p.beneficiarios.filter(x=>x!==id):[...p.beneficiarios,id]}));
@@ -333,7 +333,7 @@ const ProjectForm=({init,onSave,onClose,patients})=>{
       <Field label="Estado" span={1}><select value={f.estado} onChange={s("estado")}>{["Planificado","Activo","Completado","Suspendido"].map(o=><option key={o}>{o}</option>)}</select></Field>
       <div style={{gridColumn:"span 2"}}><label>Beneficiarios</label>
         <div style={{display:"flex",flexWrap:"wrap",gap:8,marginTop:6}}>
-          {patients.map(p=>(
+          {beneficiaries.map(p=>(
             <label key={p.id} style={{display:"flex",alignItems:"center",gap:7,textTransform:"none",letterSpacing:0,fontSize:12.5,color:T.text,cursor:"pointer",background:f.beneficiarios.includes(p.id)?T.primary+"15":T.bgSoft,borderRadius:9,padding:"7px 13px",border:`1.5px solid ${f.beneficiarios.includes(p.id)?T.primary:T.border}`,fontWeight:500}}>
               <input type="checkbox" checked={f.beneficiarios.includes(p.id)} onChange={()=>tog(p.id)} style={{width:"auto",margin:0}}/>
               {p.nombre} {p.apellido}
@@ -349,13 +349,13 @@ const ProjectForm=({init,onSave,onClose,patients})=>{
   );
 };
 
-const EFU={pacienteId:"",fecha:new Date().toISOString().slice(0,10),tipo:"Médico",descripcion:"",profesional:"",proxima:"",resultado:"Positivo"};
-const FollowupForm=({init,onSave,onClose,patients})=>{
+const EFU={beneficiarioId:"",fecha:new Date().toISOString().slice(0,10),tipo:"Médico",descripcion:"",profesional:"",proxima:"",resultado:"Positivo"};
+const FollowupForm=({init,onSave,onClose,beneficiaries})=>{
   const[f,sf]=useState(init||EFU);
   const s=k=>e=>sf(p=>({...p,[k]:e.target.value}));
   return(
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-      <Field label="Paciente"><select value={f.pacienteId} onChange={s("pacienteId")}><option value="">Seleccionar paciente...</option>{patients.map(p=><option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>)}</select></Field>
+      <Field label="Beneficiario"><select value={f.beneficiarioId} onChange={s("beneficiarioId")}><option value="">Seleccionar beneficiario...</option>{beneficiaries.map(p=><option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>)}</select></Field>
       <Field label="Fecha" span={1}><input type="date" value={f.fecha} onChange={s("fecha")}/></Field>
       <Field label="Tipo" span={1}><select value={f.tipo} onChange={s("tipo")}>{["Médico","Terapia","Educativo","Social","Psicológico"].map(o=><option key={o}>{o}</option>)}</select></Field>
       <Field label="Profesional a Cargo" span={1}><input value={f.profesional} onChange={s("profesional")}/></Field>
@@ -364,7 +364,7 @@ const FollowupForm=({init,onSave,onClose,patients})=>{
       <Field label="Descripción / Observaciones"><textarea value={f.descripcion} onChange={s("descripcion")}/></Field>
       <div style={{gridColumn:"span 2",display:"flex",gap:10,justifyContent:"flex-end"}}>
         <Btn variant="ghost" onClick={onClose}>Cancelar</Btn>
-        <Btn onClick={()=>onSave({...f,pacienteId:parseInt(f.pacienteId)})}>Guardar Seguimiento</Btn>
+        <Btn onClick={()=>onSave({...f,beneficiarioId:parseInt(f.beneficiarioId)})}>Guardar Seguimiento</Btn>
       </div>
     </div>
   );
@@ -389,17 +389,17 @@ const ImportModal=({onClose,onImport})=>{
   };
 
   const normalise=sheets=>{
-    const res={patients:[],donations:[]};
-    const ps=sheets["Pacientes"]||sheets["pacientes"]||[];
+    const res={beneficiaries:[],donations:[]};
+    const ps=sheets["Beneficiarios"]||sheets["Beneficiarios"]||[];
     ps.forEach(r=>{
       if(!r["Nombre"]&&!r["nombre"])return;
-      res.patients.push({
+      res.beneficiaries.push({
         id:uid(),
         nombre:r["Nombre"]||"",
         apellido:r["Apellido"]||"",
         fecha_nac:r["Fecha Nac."]||"",
         diagnostico:r["Diagnóstico"]||"",
-        discapacidad:r["Discapacidad"]||"Otra",
+        condicion:r["Condicion"]||"Otra",
         nivel:r["Nivel"]||"Leve",
         telefono:r["Teléfono"]||"",
         email:r["Email"]||"",
@@ -419,7 +419,7 @@ const ImportModal=({onClose,onImport})=>{
         id:uid(),
         donante:r["Donante"]||"",
         relacion:r["Relación"]||"Externo",
-        pacienteId:null,
+        beneficiarioId:null,
         monto:parseFloat(r["Monto ($)"]||0),
         fecha:r["Fecha"]||"",
         tipo:r["Tipo Pago"]||"Transferencia",
@@ -480,7 +480,7 @@ const ImportModal=({onClose,onImport})=>{
       <div style={{textAlign:"center",padding:"24px 0"}}>
         <div style={{fontSize:52,marginBottom:14}}>✅</div>
         <div style={{fontFamily:"'Fraunces',serif",fontSize:20,fontWeight:700,marginBottom:8}}>¡Datos importados con éxito!</div>
-        <div style={{color:T.textSub,fontSize:14,marginBottom:24}}>Se añadieron <strong>{done.patients.length}</strong> pacientes y <strong>{done.donations.length}</strong> donaciones.</div>
+        <div style={{color:T.textSub,fontSize:14,marginBottom:24}}>Se añadieron <strong>{done.beneficiaries.length}</strong> Beneficiarios y <strong>{done.donations.length}</strong> donaciones.</div>
         <Btn onClick={onClose}>Cerrar</Btn>
       </div>
     </Modal>
@@ -518,7 +518,7 @@ const ImportModal=({onClose,onImport})=>{
                   </div>
                 ))}
               </div>
-              <div style={{fontSize:11,color:T.textMuted,marginTop:10}}>ℹ️ Se importarán hojas <strong>Pacientes</strong> y <strong>Donaciones</strong>. Otras hojas serán ignoradas.</div>
+              <div style={{fontSize:11,color:T.textMuted,marginTop:10}}>ℹ️ Se importarán hojas <strong>Beneficiarios</strong> y <strong>Donaciones</strong>. Otras hojas serán ignoradas.</div>
             </div>
           )}
           <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
@@ -620,9 +620,9 @@ const UsersPanel = ({ users, onSaveUser, onToggleActive, onDeleteUser, currentUs
             <tbody>
               {[
                 ["Dashboard","dashboard"],
-                ["Ver Pacientes","patients_view"],
-                ["Agregar/Editar Pacientes","patients_add"],
-                ["Eliminar Pacientes","patients_del"],
+                ["Ver Beneficiarios","patients_view"],
+                ["Agregar/Editar Beneficiarios","patients_add"],
+                ["Eliminar Beneficiarios","patients_del"],
                 ["Ver Seguimientos","followups_view"],
                 ["Registrar Seguimientos","followups_add"],
                 ["Ver Donaciones","donations_view"],
@@ -898,7 +898,7 @@ const LoginScreen = ({ onLogin }) => {
 /* ─── MAIN APP ───────────────────────────────────────────────────────────── */
 const NAV_ALL = [
   { id:"dashboard", icon:"🏠", label:"Dashboard", perm:"dashboard" },
-  { id:"patients",  icon:"👥", label:"Pacientes",  perm:"patients_view" },
+  { id:"beneficiaries",  icon:"👥", label:"Beneficiarios",  perm:"patients_view" },
   { id:"projects",  icon:"📁", label:"Proyectos",  perm:"projects_view" },
   { id:"donations", icon:"💚", label:"Donaciones", perm:"donations_view" },
   { id:"followups", icon:"📋", label:"Seguimientos",perm:"followups_view" },
@@ -912,7 +912,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   
   const [view, setView] = useState("dashboard");
-  const [patients, setPatients] = useState([]);
+  const [beneficiaries, setPatients] = useState([]);
   const [projects, setProjects] = useState([]);
   const [donations, setDonations] = useState([]);
   const [followups, setFollowups] = useState([]);
@@ -934,7 +934,7 @@ export default function App() {
     setLoading(true);
     try {
       const { data: patientsData, error: patientsError } = await supabase
-        .from('patients')
+        .from('beneficiaries')
         .select('*')
         .order('id');
       if (patientsError) throw patientsError;
@@ -1011,13 +1011,13 @@ export default function App() {
 
   // ─── CRUD Operations ──────────────────────────────────────────────────
 
-  // PACIENTES
+  // Beneficiarios
   const savePat = async (patient) => {
     try {
       let result;
       if (patient.id) {
         const { data, error } = await supabase
-          .from('patients')
+          .from('beneficiaries')
           .update(patient)
           .eq('id', patient.id)
           .select()
@@ -1027,7 +1027,7 @@ export default function App() {
         setPatients(prev => prev.map(p => p.id === result.id ? result : p));
       } else {
         const { data, error } = await supabase
-          .from('patients')
+          .from('beneficiaries')
           .insert([patient])
           .select()
           .single();
@@ -1038,36 +1038,36 @@ export default function App() {
       setPatModal(null);
       return result;
     } catch (error) {
-      alert('Error al guardar paciente: ' + error.message);
+      alert('Error al guardar beneficiario: ' + error.message);
     }
   };
 
   const delPat = async (id) => {
-    if (!window.confirm('¿Eliminar paciente? Esto eliminará también todos sus seguimientos y donaciones.')) return;
+    if (!window.confirm('¿Eliminar beneficiario? Esto eliminará también todos sus seguimientos y donaciones.')) return;
     try {
       const { error: fuError } = await supabase
         .from('followups')
         .delete()
-        .eq('pacienteId', id);
+        .eq('beneficiarioId', id);
       if (fuError) throw fuError;
 
       const { error: donError } = await supabase
         .from('donations')
         .delete()
-        .eq('pacienteId', id);
+        .eq('beneficiarioId', id);
       if (donError) throw donError;
 
       const { error: patError } = await supabase
-        .from('patients')
+        .from('beneficiaries')
         .delete()
         .eq('id', id);
       if (patError) throw patError;
 
       setPatients(prev => prev.filter(p => p.id !== id));
       setDetailPat(null);
-      alert('Paciente y sus datos asociados eliminados correctamente.');
+      alert('Beneficiario y sus datos asociados eliminados correctamente.');
     } catch (error) {
-      alert('Error al eliminar paciente: ' + error.message);
+      alert('Error al eliminar beneficiario: ' + error.message);
     }
   };
 
@@ -1236,14 +1236,14 @@ export default function App() {
   };
 
   // IMPORTAR
-  const handleImport = async ({ patients: newPatients, donations: newDonations }) => {
+  const handleImport = async ({ beneficiaries: newPatients, donations: newDonations }) => {
     try {
       if (newPatients.length) {
         const { error } = await supabase
-          .from('patients')
+          .from('beneficiaries')
           .insert(newPatients);
         if (error) throw error;
-        const { data } = await supabase.from('patients').select('*').order('id');
+        const { data } = await supabase.from('beneficiaries').select('*').order('id');
         setPatients(data || []);
       }
       if (newDonations.length) {
@@ -1264,12 +1264,12 @@ export default function App() {
   const exportExcel = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
-      patients.map(p => ({
+      beneficiaries.map(p => ({
         Nombre: `${p.nombre} ${p.apellido}`,
         "Fecha Nac.": p.fecha_nac,
         Edad: edad(p.fecha_nac),
         Diagnóstico: p.diagnostico,
-        Discapacidad: p.discapacidad,
+        Condicion: p.condicion,
         Nivel: p.nivel,
         Tutor: p.tutor,
         Relación: p.relacionTutor,
@@ -1280,15 +1280,15 @@ export default function App() {
         Estado: p.estado,
         Notas: p.notas
       }))
-    ), "Pacientes");
+    ), "Beneficiarios");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
       donations.map(d => {
-        const pac = patients.find(p => p.id === d.pacienteId);
+        const pac = beneficiaries.find(p => p.id === d.beneficiarioId);
         const proj = projects.find(p => p.id === d.proyectoId);
         return {
           Donante: d.donante,
           Relación: d.relacion,
-          Paciente: pac ? `${pac.nombre} ${pac.apellido}` : "–",
+          Beneficiario: pac ? `${pac.nombre} ${pac.apellido}` : "–",
           "Monto ($)": d.monto,
           Fecha: d.fecha,
           "Tipo Pago": d.tipo,
@@ -1310,9 +1310,9 @@ export default function App() {
     ), "Proyectos");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
       followups.map(f => {
-        const pac = patients.find(p => p.id === f.pacienteId);
+        const pac = beneficiaries.find(p => p.id === f.beneficiarioId);
         return {
-          Paciente: pac ? `${pac.nombre} ${pac.apellido}` : "–",
+          Beneficiario: pac ? `${pac.nombre} ${pac.apellido}` : "–",
           Fecha: f.fecha,
           Tipo: f.tipo,
           Descripción: f.descripcion,
@@ -1323,8 +1323,8 @@ export default function App() {
       })
     ), "Seguimientos");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
-      { Indicador:"Total Pacientes", Valor:patients.length },
-      { Indicador:"Pacientes Activos", Valor:patients.filter(p => p.estado === "Activo").length },
+      { Indicador:"Total Beneficiarios", Valor:beneficiaries.length },
+      { Indicador:"Beneficiarios Activos", Valor:beneficiaries.filter(p => p.estado === "Activo").length },
       { Indicador:"Total Donaciones ($)", Valor:donations.reduce((s,d) => s + d.monto, 0) },
       { Indicador:"Proyectos Activos", Valor:projects.filter(p => p.estado === "Activo").length },
       { Indicador:"Total Seguimientos", Valor:followups.length }
@@ -1335,9 +1335,9 @@ export default function App() {
   // ─── UseMemo ──────────────────────────────────────────────────────────
   const discData = useMemo(() => {
     const c = {};
-    patients.forEach(p => { c[p.discapacidad] = (c[p.discapacidad] || 0) + 1; });
+    beneficiaries.forEach(p => { c[p.condicion] = (c[p.condicion] || 0) + 1; });
     return Object.entries(c).map(([n, v]) => ({ name: n, value: v }));
-  }, [patients]);
+  }, [beneficiaries]);
 
   const donByMonth = useMemo(() => {
     const c = {};
@@ -1365,7 +1365,7 @@ export default function App() {
 
   // ─── Estadísticas ──────────────────────────────────────────────────────
   const totalDon = donations.reduce((s,d) => s + d.monto, 0);
-  const activeP = patients.filter(p => p.estado === "Activo").length;
+  const activeP = beneficiaries.filter(p => p.estado === "Activo").length;
   const activePr = projects.filter(p => p.estado === "Activo").length;
   const now = new Date();
   const fuMonth = followups.filter(f => {
@@ -1375,11 +1375,11 @@ export default function App() {
 
   const nav = NAV_ALL.filter(n => can(currentUser, n.perm));
   const roleInfo = currentUser ? ROLES[currentUser.role] : null;
-  const discTypes = ["Todos", ...new Set(patients.map(p => p.discapacidad))];
+  const discTypes = ["Todos", ...new Set(beneficiaries.map(p => p.condicion))];
 
-  const filtPat = patients.filter(p => {
+  const filtPat = beneficiaries.filter(p => {
     const s = `${p.nombre} ${p.apellido} ${p.diagnostico} ${p.tutor}`.toLowerCase().includes(search.toLowerCase());
-    const d = filterDisc === "Todos" || p.discapacidad === filterDisc;
+    const d = filterDisc === "Todos" || p.condicion === filterDisc;
     const e = filterEst === "Todos" || p.estado === filterEst;
     return s && d && e;
   });
@@ -1597,7 +1597,7 @@ export default function App() {
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.text, display: "flex", alignItems: "center", gap: 8 }}>
                 <span>{nav.find(n => n.id === view)?.icon}</span>
                 {nav.find(n => n.id === view)?.label}
-                {detailPat && view === "patients" && <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 16 }}>/ {detailPat.nombre} {detailPat.apellido}</span>}
+                {detailPat && view === "beneficiaries" && <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 16 }}>/ {detailPat.nombre} {detailPat.apellido}</span>}
               </div>
               <div style={{ fontSize: 11.5, color: T.textMuted, marginTop: 1 }}>
                 {new Date().toLocaleDateString("es-CL", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
@@ -1605,7 +1605,7 @@ export default function App() {
             </div>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               {can(currentUser, "import") && <Btn variant="soft" onClick={() => setImportModal(true)} sm icon="📤">Importar</Btn>}
-              {view === "patients" && !detailPat && can(currentUser, "patients_add") && <Btn onClick={() => setPatModal("new")} icon="＋">Nuevo Paciente</Btn>}
+              {view === "beneficiaries" && !detailPat && can(currentUser, "patients_add") && <Btn onClick={() => setPatModal("new")} icon="＋">Nuevo Beneficiario</Btn>}
               {view === "donations" && can(currentUser, "donations_add") && <Btn variant="accent" onClick={() => setDonModal(true)} icon="＋">Registrar Donación</Btn>}
               {view === "projects" && can(currentUser, "projects_add") && <Btn onClick={() => setProjModal("new")} icon="＋">Nuevo Proyecto</Btn>}
               {view === "followups" && can(currentUser, "followups_add") && <Btn onClick={() => setFuModal("new")} icon="＋">Nuevo Seguimiento</Btn>}
@@ -1687,7 +1687,7 @@ export default function App() {
                   </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
-                  <StatCard icon="👥" label="Pacientes Activos" value={activeP} sub={`de ${patients.length} registrados`} color={T.primary} />
+                  <StatCard icon="👥" label="Beneficiarios Activos" value={activeP} sub={`de ${beneficiaries.length} registrados`} color={T.primary} />
                   {can(currentUser, "donations_view") && <StatCard icon="💚" label="Total Donaciones" value={fmt(totalDon)} sub={`${donations.length} donaciones`} color={T.green} />}
                   {can(currentUser, "projects_view") && <StatCard icon="📁" label="Proyectos Activos" value={activePr} sub={`de ${projects.length} proyectos`} color={T.accent} />}
                   {can(currentUser, "followups_view") && <StatCard icon="📋" label="Seguimientos / Mes" value={fuMonth} sub={`${followups.length} histórico`} color={T.blue} />}
@@ -1709,7 +1709,7 @@ export default function App() {
                     </Card>
                   )}
                   <Card style={{ padding: 24 }}>
-                    <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Pacientes por Tipo</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Beneficiarios por Tipo</div>
                     <ResponsiveContainer width="100%" height={210}>
                       <PieChart>
                         <Pie data={discData} cx="50%" cy="50%" innerRadius={56} outerRadius={82} paddingAngle={3} dataKey="value">
@@ -1751,7 +1751,7 @@ export default function App() {
                     <Card style={{ padding: 24 }}>
                       <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Últimos Seguimientos</div>
                       {[...followups].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 5).map(f => {
-                        const pac = patients.find(p => p.id === f.pacienteId);
+                        const pac = beneficiaries.find(p => p.id === f.beneficiarioId);
                         const rc = f.resultado === "Positivo" ? T.green : f.resultado === "Neutral" ? T.gold : T.red;
                         return (
                           <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 12, paddingBottom: 13, marginBottom: 13, borderBottom: `1px solid ${T.border}` }}>
@@ -1773,7 +1773,7 @@ export default function App() {
             )}
 
             {/* --- PATIENTS LIST --- */}
-            {view === "patients" && !detailPat && (
+            {view === "beneficiaries" && !detailPat && (
               can(currentUser, "patients_view") ? (
                 <div style={{ animation: "fadeUp 0.3s ease" }}>
                   <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
@@ -1784,7 +1784,7 @@ export default function App() {
                   </div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(290px,1fr))", gap:16 }}>
                     {filtPat.map((p, i) => {
-                      const di = { Física:"♿", Sensorial:"👁", Cognitiva:"🧩" }[p.discapacidad] || "🧩";
+                      const di = { Física:"♿", Sensorial:"👁", Cognitiva:"🧩" }[p.condicion] || "🧩";
                       return (
                         <div key={p.id} onClick={() => setDetailPat(p)} style={{
                           background: T.bgCard, borderRadius: 16, padding: 20,
@@ -1805,7 +1805,7 @@ export default function App() {
                             </div>
                             {estadoBadge(p.estado)}
                           </div>
-                          {[["Diagnóstico", p.diagnostico], ["Discapacidad", `${p.discapacidad} · Nivel ${p.nivel}`], ["Tutor", `${p.tutor} (${p.relacionTutor})`]].map(([k, v]) => (
+                          {[["Diagnóstico", p.diagnostico], ["Condicion", `${p.condicion} · Nivel ${p.nivel}`], ["Tutor", `${p.tutor} (${p.relacionTutor})`]].map(([k, v]) => (
                             <div key={k} style={{ display: "flex", gap: 6, fontSize: 12, marginBottom: 4 }}>
                               <span style={{ color: T.primary, fontWeight: 600, flexShrink: 0 }}>{k}:</span>
                               <span style={{ color: T.textSub }}>{v}</span>
@@ -1824,24 +1824,24 @@ export default function App() {
             )}
 
             {/* --- PATIENT DETAIL --- */}
-            {view === "patients" && detailPat && (() => {
-              const p = patients.find(x => x.id === detailPat.id) || detailPat;
-              const patFu = followups.filter(f => f.pacienteId === p.id);
-              const patDon = donations.filter(d => d.pacienteId === p.id);
+            {view === "beneficiaries" && detailPat && (() => {
+              const p = beneficiaries.find(x => x.id === detailPat.id) || detailPat;
+              const patFu = followups.filter(f => f.beneficiarioId === p.id);
+              const patDon = donations.filter(d => d.beneficiarioId === p.id);
               const patProj = projects.filter(pr => pr.beneficiarios && pr.beneficiarios.includes(p.id));
               return (
                 <div style={{ animation: "fadeUp 0.25s ease" }}>
-                  <button onClick={() => setDetailPat(null)} style={{ background: "none", border: "none", cursor: "pointer", color: T.primary, fontWeight: 600, fontSize: 13, marginBottom: 22, display: "flex", alignItems: "center", gap: 6 }}>← Volver a Pacientes</button>
+                  <button onClick={() => setDetailPat(null)} style={{ background: "none", border: "none", cursor: "pointer", color: T.primary, fontWeight: 600, fontSize: 13, marginBottom: 22, display: "flex", alignItems: "center", gap: 6 }}>← Volver a Beneficiarios</button>
                   <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20 }}>
                     <div>
                       <Card style={{ padding: 24, marginBottom: 16 }}>
                         <div style={{ textAlign: "center", marginBottom: 20 }}>
-                          <div style={{ width: 72, height: 72, borderRadius: 20, background: `${T.primary}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 12px", border: `1px solid ${T.primary}20` }}>{({ Física: "♿", Sensorial: "👁" })[p.discapacidad] || "🧩"}</div>
+                          <div style={{ width: 72, height: 72, borderRadius: 20, background: `${T.primary}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 12px", border: `1px solid ${T.primary}20` }}>{({ Física: "♿", Sensorial: "👁" })[p.condicion] || "🧩"}</div>
                           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700 }}>{p.nombre} {p.apellido}</div>
                           <div style={{ color: T.textMuted, fontSize: 12, margin: "4px 0 10px" }}>{edad(p.fecha_nac)} años · {fmtD(p.fecha_nac)}</div>
                           {estadoBadge(p.estado)}
                         </div>
-                        {[["Diagnóstico", p.diagnostico], ["Discapacidad", p.discapacidad], ["Nivel de Apoyo", p.nivel], ["Teléfono", p.telefono], ["Email", p.email || "–"], ["Dirección", p.direccion], ["Ingreso", fmtD(p.fecha_ingreso)]].map(([k, v]) => (
+                        {[["Diagnóstico", p.diagnostico], ["Condicion", p.condicion], ["Nivel de Apoyo", p.nivel], ["Teléfono", p.telefono], ["Email", p.email || "–"], ["Dirección", p.direccion], ["Ingreso", fmtD(p.fecha_ingreso)]].map(([k, v]) => (
                           <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${T.border}`, fontSize: 12.5 }}>
                             <span style={{ color: T.textMuted, fontWeight: 500 }}>{k}</span>
                             <span style={{ color: T.text, fontWeight: 600, textAlign: "right", maxWidth: "58%" }}>{v}</span>
@@ -1866,7 +1866,7 @@ export default function App() {
                         <Card style={{ padding: 20 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                             <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15 }}>Seguimientos <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>({patFu.length})</span></div>
-                            {can(currentUser, "followups_add") && <Btn sm onClick={() => setFuModal({ pacienteId: p.id })} icon="＋">Agregar</Btn>}
+                            {can(currentUser, "followups_add") && <Btn sm onClick={() => setFuModal({ beneficiarioId: p.id })} icon="＋">Agregar</Btn>}
                           </div>
                           {patFu.length === 0 ? <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: 20 }}>Sin seguimientos registrados</div> :
                             patFu.sort((a, b) => b.fecha.localeCompare(a.fecha)).map(f => (
@@ -1944,14 +1944,14 @@ export default function App() {
                       <table style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
                           <tr style={{ background: T.bgSoft }}>
-                            {["Donante", "Relación", "Paciente", "Monto", "Fecha", "Tipo", "Proyecto", "Notas"].map(h => (
+                            {["Donante", "Relación", "Beneficiario", "Monto", "Fecha", "Tipo", "Proyecto", "Notas"].map(h => (
                               <th key={h} style={{ padding: "11px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           {[...donations].sort((a, b) => b.fecha.localeCompare(a.fecha)).map(d => {
-                            const pac = patients.find(p => p.id === d.pacienteId);
+                            const pac = beneficiaries.find(p => p.id === d.beneficiarioId);
                             const proj = projects.find(p => p.id === d.proyectoId);
                             return (
                               <tr key={d.id} style={{ borderBottom: `1px solid ${T.border}` }}
@@ -1982,7 +1982,7 @@ export default function App() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(330px,1fr))", gap: 20, animation: "fadeUp 0.3s ease" }}>
                   {projects.map(p => {
                     const pct = Math.min(100, Math.round(p.recaudado / p.objetivo * 100));
-                    const bens = patients.filter(x => p.beneficiarios && p.beneficiarios.includes(x.id));
+                    const bens = beneficiaries.filter(x => p.beneficiarios && p.beneficiarios.includes(x.id));
                     const pDon = donations.filter(d => d.proyectoId === p.id);
                     return (
                       <Card key={p.id} style={{ overflow: "hidden" }}>
@@ -2035,13 +2035,13 @@ export default function App() {
                       onChange={e => setFilterFuPatient(e.target.value)}
                       style={{ width: "auto", minWidth: 180 }}
                     >
-                      <option value="Todos">Todos los pacientes</option>
-                      {patients.map(p => (
+                      <option value="Todos">Todos los Beneficiarios</option>
+                      {beneficiaries.map(p => (
                         <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>
                       ))}
                     </select>
                     <span style={{ fontSize: 12, color: T.textMuted }}>
-                      {followups.filter(f => filterFuPatient === "Todos" || f.pacienteId === parseInt(filterFuPatient)).length} seguimientos
+                      {followups.filter(f => filterFuPatient === "Todos" || f.beneficiarioId === parseInt(filterFuPatient)).length} seguimientos
                     </span>
                     {can(currentUser, "followups_add") && (
                       <Btn onClick={() => setFuModal("new")} icon="＋">Nuevo Seguimiento</Btn>
@@ -2050,10 +2050,10 @@ export default function App() {
 
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(290px,1fr))", gap: 16 }}>
                     {[...followups]
-                      .filter(f => filterFuPatient === "Todos" || f.pacienteId === parseInt(filterFuPatient))
+                      .filter(f => filterFuPatient === "Todos" || f.beneficiarioId === parseInt(filterFuPatient))
                       .sort((a, b) => b.fecha.localeCompare(a.fecha))
                       .map((f, i) => {
-                        const pac = patients.find(p => p.id === f.pacienteId);
+                        const pac = beneficiaries.find(p => p.id === f.beneficiarioId);
                         const tc = { Médico: T.blue, Terapia: T.green, Educativo: T.accent, Social: T.purple, Psicológico: T.teal }[f.tipo] || T.primary;
                         const rc = f.resultado === "Positivo" ? T.green : f.resultado === "Neutral" ? T.gold : T.red;
                         return (
@@ -2149,28 +2149,28 @@ export default function App() {
                   </div>
                   <Card style={{ overflow: "hidden" }}>
                     <div style={{ padding: "18px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15 }}>Resumen por Paciente</div>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15 }}>Resumen por Beneficiario</div>
                       {can(currentUser, "export") && <Btn sm variant="gold" onClick={exportExcel} icon="📥">Exportar Excel</Btn>}
                     </div>
                     <div style={{ overflowX: "auto" }}>
                       <table style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
                           <tr style={{ background: T.bgSoft }}>
-                            {["Paciente", "Discapacidad", "Nivel", "Seguimientos", "Donaciones ($)", "Proyectos", "Estado"].map(h => (
+                            {["Beneficiario", "Condicion", "Nivel", "Seguimientos", "Donaciones ($)", "Proyectos", "Estado"].map(h => (
                               <th key={h} style={{ padding: "11px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {patients.map(p => (
+                          {beneficiaries.map(p => (
                             <tr key={p.id} style={{ borderBottom: `1px solid ${T.border}` }}
                               onMouseEnter={e => e.currentTarget.style.background = T.bgSoft}
                               onMouseLeave={e => e.currentTarget.style.background = ""}>
                               <td style={{ padding: "11px 16px", fontWeight: 600, fontSize: 13 }}>{p.nombre} {p.apellido}</td>
-                              <td style={{ padding: "11px 16px", fontSize: 12, color: T.textSub }}>{p.discapacidad}</td>
+                              <td style={{ padding: "11px 16px", fontSize: 12, color: T.textSub }}>{p.condicion}</td>
                               <td style={{ padding: "11px 16px", fontSize: 12, color: T.textSub }}>{p.nivel}</td>
-                              <td style={{ padding: "11px 16px", textAlign: "center", fontWeight: 700, color: T.primary }}>{followups.filter(f => f.pacienteId === p.id).length}</td>
-                              <td style={{ padding: "11px 16px", fontWeight: 700, color: T.green }}>{fmt(donations.filter(d => d.pacienteId === p.id).reduce((s, d) => s + d.monto, 0))}</td>
+                              <td style={{ padding: "11px 16px", textAlign: "center", fontWeight: 700, color: T.primary }}>{followups.filter(f => f.beneficiarioId === p.id).length}</td>
+                              <td style={{ padding: "11px 16px", fontWeight: 700, color: T.green }}>{fmt(donations.filter(d => d.beneficiarioId === p.id).reduce((s, d) => s + d.monto, 0))}</td>
                               <td style={{ padding: "11px 16px", textAlign: "center" }}>{projects.filter(pr => pr.beneficiarios && pr.beneficiarios.includes(p.id)).length}</td>
                               <td style={{ padding: "11px 16px" }}>{estadoBadge(p.estado)}</td>
                             </tr>
@@ -2200,14 +2200,14 @@ export default function App() {
       </div>
 
       {/* MODALES */}
-      {patModal && <Modal title={patModal === "new" ? "Registrar Nuevo Paciente" : "Editar Paciente"} subtitle="Fundación Crescendo" onClose={() => setPatModal(null)} wide>
+      {patModal && <Modal title={patModal === "new" ? "Registrar Nuevo Beneficiario" : "Editar Beneficiario"} subtitle="Fundación Crescendo" onClose={() => setPatModal(null)} wide>
         <PatientForm init={patModal !== "new" ? patModal : null} onSave={savePat} onClose={() => setPatModal(null)} />
       </Modal>}
       {donModal && <Modal title="Registrar Donación" subtitle="Los registros de donaciones son permanentes" onClose={() => setDonModal(false)}>
-        <DonationForm onSave={saveDon} onClose={() => setDonModal(false)} patients={patients} projects={projects} />
+        <DonationForm onSave={saveDon} onClose={() => setDonModal(false)} beneficiaries={beneficiaries} projects={projects} />
       </Modal>}
       {projModal && <Modal title={projModal === "new" ? "Nuevo Proyecto" : "Editar Proyecto"} onClose={() => setProjModal(null)} wide>
-        <ProjectForm init={projModal !== "new" ? projModal : null} onSave={saveProj} onClose={() => setProjModal(null)} patients={patients} />
+        <ProjectForm init={projModal !== "new" ? projModal : null} onSave={saveProj} onClose={() => setProjModal(null)} beneficiaries={beneficiaries} />
       </Modal>}
       {fuModal && (
         <Modal title={fuModal?.id ? "Editar Seguimiento" : "Nuevo Seguimiento"} onClose={() => setFuModal(null)}>
@@ -2215,7 +2215,7 @@ export default function App() {
             init={fuModal?.id ? fuModal : (fuModal === "new" ? null : null)}
             onSave={saveFu}
             onClose={() => setFuModal(null)}
-            patients={patients}
+            beneficiaries={beneficiaries}
           />
         </Modal>
       )}
