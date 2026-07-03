@@ -14,8 +14,6 @@ fl.rel = "stylesheet";
 fl.href = "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap";
 document.head.appendChild(fl);
 
-
-
 /* ─── PALETTE "CUIDADO INTEGRAL" ──────────────────────────────────────── */
 const T = {
   primary: "#2C7A7B",
@@ -37,11 +35,12 @@ const T = {
   purple: "#B39DDB",
   sidebar: "#1E3D3D",
   sidebarLine: "rgba(255,255,255,0.08)",
+  white: "#ffffff"
 };
 
 const PIE = [T.primary, T.accent, T.blue, T.gold, T.purple, T.teal];
 
-/* ─── GLOBAL STYLES ─────────────────────────────────────────────────────── */
+/* ─── GLOBAL STYLES (incluyendo responsive) ───────────────────────────── */
 const GS = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -86,6 +85,31 @@ const GS = `
   }
   @keyframes spin {
     to { transform: rotate(360deg); }
+  }
+  @keyframes fadeIn {
+    from { opacity:0; }
+    to { opacity:1; }
+  }
+
+  /* ─── RESPONSIVE ────────────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    body { font-size: 14px; }
+    input, select, textarea { font-size: 16px !important; }
+    .hamburger-mobile { display: block !important; }
+    .hide-on-mobile { display: none !important; }
+    .btn-sm { padding: 8px 12px !important; font-size: 12px !important; min-height: 44px; }
+    .card-padding { padding: 16px !important; }
+    .main-padding { padding: 12px 16px !important; }
+    .grid-1col-mobile { grid-template-columns: 1fr !important; }
+    .text-sm-mobile { font-size: 13px !important; }
+  }
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .grid-2col-tablet { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+  @media (max-width: 480px) {
+    .btn { font-size: 12px !important; padding: 8px 12px !important; }
+    .stat-card { padding: 16px !important; }
+    .stat-card-value { font-size: 20px !important; }
   }
 `;
 
@@ -181,7 +205,6 @@ const Badge=({text,color="#999"})=><span style={{
   display:"inline-block"
 }}>{text}</span>;
 
-
 const estadoBadge = e => {
   const m = {
     Activo: T.green,
@@ -209,37 +232,48 @@ const Card = ({children,style}) => <div style={{
   boxShadow:"0 4px 20px rgba(0,0,0,0.04)", ...style
 }}>{children}</div>;
 
-const Modal = ({title,subtitle,onClose,children,wide}) => (
-  <div style={{
-    position:"fixed", inset:0,
-    background:"rgba(30,61,61,0.5)",
-    backdropFilter:"blur(6px)",
-    display:"flex", alignItems:"center", justifyContent:"center",
-    zIndex:1000, padding:20
-  }}>
+const Modal = ({title,subtitle,onClose,children,wide}) => {
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  const isMobile = windowWidth < 768;
+  return (
     <div style={{
-      background:T.bgCard, borderRadius:18, width:"100%",
-      maxWidth:wide?800:560, maxHeight:"90vh", overflowY:"auto",
-      boxShadow:"0 30px 80px rgba(0,0,0,0.2)", animation:"fadeUp 0.25s ease"
+      position:"fixed", inset:0,
+      background:"rgba(30,61,61,0.5)",
+      backdropFilter:"blur(6px)",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      zIndex:1000, padding: isMobile ? 10 : 20
     }}>
       <div style={{
-        padding:"22px 28px 18px", borderBottom:`1px solid ${T.border}`,
-        display:"flex", alignItems:"flex-start", justifyContent:"space-between"
+        background:T.bgCard, borderRadius:18, width:"100%",
+        maxWidth:wide ? (isMobile ? '95%' : 800) : (isMobile ? '95%' : 560),
+        maxHeight:"90vh", overflowY:"auto",
+        boxShadow:"0 30px 80px rgba(0,0,0,0.2)", animation:"fadeUp 0.25s ease"
       }}>
-        <div>
-          <div style={{fontFamily:"'Fraunces',serif",fontSize:19,fontWeight:700,color:T.text}}>{title}</div>
-          {subtitle&&<div style={{fontSize:12,color:T.textMuted,marginTop:3}}>{subtitle}</div>}
+        <div style={{
+          padding: isMobile ? "16px 20px 14px" : "22px 28px 18px",
+          borderBottom:`1px solid ${T.border}`,
+          display:"flex", alignItems:"flex-start", justifyContent:"space-between"
+        }}>
+          <div>
+            <div style={{fontFamily:"'Fraunces',serif",fontSize: isMobile ? 17 : 19, fontWeight:700, color:T.text}}>{title}</div>
+            {subtitle&&<div style={{fontSize: isMobile ? 11 : 12, color:T.textMuted, marginTop:3}}>{subtitle}</div>}
+          </div>
+          <button onClick={onClose} style={{
+            background:T.bgSoft, border:"none", borderRadius:8,
+            width:32, height:32, cursor:"pointer", fontSize:16,
+            color:T.textMuted, flexShrink:0
+          }}>✕</button>
         </div>
-        <button onClick={onClose} style={{
-          background:T.bgSoft, border:"none", borderRadius:8,
-          width:32, height:32, cursor:"pointer", fontSize:16,
-          color:T.textMuted, flexShrink:0
-        }}>✕</button>
+        <div style={{padding: isMobile ? 16 : 28}}>{children}</div>
       </div>
-      <div style={{padding:28}}>{children}</div>
     </div>
-  </div>
-);
+  );
+};
 
 const StatCard = ({icon,label,value,sub,color=T.primary}) => (
   <div style={{
@@ -254,7 +288,7 @@ const StatCard = ({icon,label,value,sub,color=T.primary}) => (
     <div style={{background:color+"15", borderRadius:12, width:46, height:46, display:"flex", alignItems:"center", justifyContent:"center", fontSize:20}}>{icon}</div>
     <div>
       <div style={{fontSize:11,color:T.textMuted,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em"}}>{label}</div>
-      <div style={{fontSize:26,fontWeight:700,color:T.text,lineHeight:1.15,fontFamily:"'Fraunces',serif",marginTop:2}}>{value}</div>
+      <div style={{fontSize:"clamp(20px, 26px, 2.5vw)",fontWeight:700,color:T.text,lineHeight:1.15,fontFamily:"'Fraunces',serif",marginTop:2}}>{value}</div>
       {sub&&<div style={{fontSize:11.5,color:T.textMuted,marginTop:3}}>{sub}</div>}
     </div>
   </div>
@@ -916,6 +950,7 @@ export default function App() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [view, setView] = useState("dashboard");
   const [beneficiaries, setPatients] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -933,6 +968,16 @@ export default function App() {
   const [filterFuPatient, setFilterFuPatient] = useState("Todos");
   const [sideOpen, setSideOpen] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // Detectar tamaño de pantalla para responsive
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = windowWidth < 768;
 
   // --- Cargar datos desde Supabase ---
   const fetchData = async () => {
@@ -1006,6 +1051,7 @@ export default function App() {
 
   const logout = () => {
     setCurrentUser(null);
+    setMobileMenuOpen(false);
   };
 
   useEffect(() => {
@@ -1336,7 +1382,8 @@ export default function App() {
     ]), "Estadísticas");
     XLSX.writeFile(wb, `crescendo_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
-  // ─── ExportPDF ──────────────────────────────────────────────────────────
+
+  // ─── PDF ──────────────────────────────────────────────────────────────
   const pdfContentRef = useRef(null);
 
   const renderPDFContent = () => {
@@ -1356,7 +1403,6 @@ export default function App() {
         maxWidth: '800px',
         margin: '0 auto'
       }}>
-        {/* Header */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -1390,7 +1436,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Información personal */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '28px' }}>
           <div>
             <div style={{ fontSize: '26px', fontWeight: 700, fontFamily: "'Fraunces', serif", color: '#1E3D3D' }}>
@@ -1421,7 +1466,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Tutor */}
         <div style={{
           background: '#F4F7F6',
           borderRadius: '12px',
@@ -1436,7 +1480,6 @@ export default function App() {
           {p.notas && <div style={{ fontSize: '13px', marginTop: '6px', color: '#5A6B6B' }}>📝 {p.notas}</div>}
         </div>
 
-        {/* Seguimientos */}
         {patFu.length > 0 && (
           <div style={{ marginBottom: '24px' }}>
             <div style={{
@@ -1495,7 +1538,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Footer */}
         <div style={{
           marginTop: '32px',
           paddingTop: '16px',
@@ -1509,78 +1551,46 @@ export default function App() {
       </div>
     );
   };
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
   const exportPDF = async () => {
-  if (!detailPat) return;
-  
-  try {
-    // Esperar un momento para que el contenido oculto se renderice
-    await new Promise(resolve => setTimeout(resolve, 200));
+    if (!detailPat) return;
     
-    const element = pdfContentRef.current;
-    if (!element) {
-      alert('Error: No se pudo generar el PDF');
-      return;
+    try {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const element = pdfContentRef.current;
+      if (!element) {
+        alert('Error: No se pudo generar el PDF');
+        return;
+      }
+      
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#FFFFFF',
+        logging: false
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      if (pdfHeight > pdf.internal.pageSize.getHeight()) {
+        const scaleFactor = pdf.internal.pageSize.getHeight() / pdfHeight;
+        const newWidth = pdfWidth * scaleFactor;
+        const newHeight = pdf.internal.pageSize.getHeight();
+        pdf.addImage(imgData, 'PNG', (pdfWidth - newWidth) / 2, 0, newWidth, newHeight);
+      } else {
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      }
+      
+      pdf.save(`perfil_${detailPat.nombre}_${detailPat.apellido}.pdf`);
+    } catch (error) {
+      console.error('Error al generar PDF:', error);
+      alert('Error al generar el PDF. Inténtalo de nuevo.');
     }
-    
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#FFFFFF',
-      logging: false
-    });
-    
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    
-    // Si el contenido es más alto que una página, ajustamos
-    if (pdfHeight > pdf.internal.pageSize.getHeight()) {
-      // Para contenido largo, podemos usar varias páginas o escalar
-      // Por simplicidad, escalamos para que quepa en una página
-      const scaleFactor = pdf.internal.pageSize.getHeight() / pdfHeight;
-      const newWidth = pdfWidth * scaleFactor;
-      const newHeight = pdf.internal.pageSize.getHeight();
-      pdf.addImage(imgData, 'PNG', (pdfWidth - newWidth) / 2, 0, newWidth, newHeight);
-    } else {
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    }
-    
-    pdf.save(`perfil_${detailPat.nombre}_${detailPat.apellido}.pdf`);
-  } catch (error) {
-    console.error('Error al generar PDF:', error);
-    alert('Error al generar el PDF. Inténtalo de nuevo.');
-  }
-};
+  };
 
   // ─── UseMemo ──────────────────────────────────────────────────────────
   const discData = useMemo(() => {
@@ -1681,19 +1691,23 @@ export default function App() {
       <div style={{ display: "flex", minHeight: "100vh" }}>
         {/* SIDEBAR */}
         <aside style={{
-          width: sideOpen ? 228 : 64,
+          width: isMobile ? (mobileMenuOpen ? '80%' : 0) : (sideOpen ? 228 : 64),
           background: T.sidebar,
           flexShrink: 0,
-          transition: "width 0.25s cubic-bezier(.4,0,.2,1)",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          position: "sticky",
+          transition: 'width 0.25s cubic-bezier(.4,0,.2,1), transform 0.25s ease',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          position: isMobile ? 'fixed' : 'sticky',
           top: 0,
-          height: "100vh"
+          left: 0,
+          height: '100vh',
+          zIndex: isMobile ? 1000 : 1,
+          transform: isMobile && !mobileMenuOpen ? 'translateX(-100%)' : 'translateX(0)',
+          boxShadow: isMobile && mobileMenuOpen ? '0 0 30px rgba(0,0,0,0.3)' : 'none'
         }}>
           <div style={{
-            padding: sideOpen ? "22px 20px 18px" : "18px 14px",
+            padding: isMobile ? "16px" : (sideOpen ? "22px 20px 18px" : "18px 14px"),
             borderBottom: `1px solid ${T.sidebarLine}`,
             display: "flex",
             alignItems: "center",
@@ -1707,15 +1721,15 @@ export default function App() {
               fontSize: 18, flexShrink: 0,
               boxShadow: `0 4px 12px ${T.accent}44`
             }}>🌿</div>
-            {sideOpen && (
+            {(sideOpen || isMobile) && (
               <div>
-                <div style={{ fontFamily: "'Fraunces',serif", color: "#fff", fontSize: 15, fontWeight: 700, lineHeight: 1.2 }}>Fundación Crescendo</div>
-                <div style={{ color: "#80CBC4", fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Gestión Integral</div>
+                <div style={{ fontFamily: "'Fraunces',serif", color: "#fff", fontSize: isMobile ? 14 : 15, fontWeight: 700, lineHeight: 1.2 }}>Fundación Crescendo</div>
+                <div style={{ color: "#80CBC4", fontSize: isMobile ? 9 : 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Gestión Integral</div>
               </div>
             )}
           </div>
 
-          {sideOpen && (
+          {(sideOpen || isMobile) && (
             <div style={{
               padding: "14px 16px",
               borderBottom: `1px solid ${T.sidebarLine}`,
@@ -1739,32 +1753,32 @@ export default function App() {
           )}
 
           <nav style={{ flex: 1, padding: "10px 8px", overflowY: "auto" }}>
-            {sideOpen && <div style={{ fontSize: 9, color: "#4A7A7A", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "8px 12px 6px" }}>NAVEGACIÓN</div>}
+            {(sideOpen || isMobile) && <div style={{ fontSize: 9, color: "#4A7A7A", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "8px 12px 6px" }}>NAVEGACIÓN</div>}
             {nav.map(n => {
               const active = view === n.id;
               return (
-                <button key={n.id} onClick={() => { setView(n.id); setDetailPat(null); }} style={{
+                <button key={n.id} onClick={() => { setView(n.id); setDetailPat(null); if (isMobile) setMobileMenuOpen(false); }} style={{
                   display: "flex", alignItems: "center", gap: 12, width: "100%",
-                  padding: sideOpen ? "10px 14px" : "12px", borderRadius: 10,
+                  padding: (sideOpen || isMobile) ? "10px 14px" : "12px", borderRadius: 10,
                   border: "none", background: active ? "rgba(255,255,255,0.12)" : "transparent",
                   color: active ? "#fff" : "rgba(255,255,255,0.5)", cursor: "pointer",
                   textAlign: "left", marginBottom: 2, transition: "all 0.15s",
                   fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 13,
                   fontWeight: active ? 600 : 400,
-                  justifyContent: sideOpen ? "flex-start" : "center",
+                  justifyContent: (sideOpen || isMobile) ? "flex-start" : "center",
                   borderLeft: active ? `3px solid ${T.accentLt}` : "3px solid transparent"
                 }}
                   onMouseEnter={e => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
                   onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
                 >
                   <span style={{ fontSize: 18, flexShrink: 0 }}>{n.icon}</span>
-                  {sideOpen && n.label}
+                  {(sideOpen || isMobile) && n.label}
                 </button>
               );
             })}
           </nav>
 
-          {sideOpen && (
+          {(sideOpen || isMobile) && (
             <div style={{ padding: 16, borderTop: `1px solid ${T.sidebarLine}`, display: "flex", flexDirection: "column", gap: 8 }}>
               {can(currentUser, "import") && (
                 <button onClick={() => setImportModal(true)} style={{
@@ -1806,32 +1820,59 @@ export default function App() {
           )}
 
           <div style={{ display: "flex", alignItems: "center", borderTop: `1px solid ${T.sidebarLine}` }}>
-            <button onClick={() => setSideOpen(o => !o)} style={{
-              flex: 1, padding: 14, background: "transparent", border: "none",
-              color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 14,
-              textAlign: "left"
-            }}
-              onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.6)"}
-              onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}
-            >
-              {sideOpen ? "◂ Colapsar" : "▸"}
-            </button>
-            {sideOpen && (
-              <button onClick={logout} style={{
-                padding: "8px 12px", marginRight: 10,
-                background: "rgba(229,152,155,0.15)",
-                border: "1px solid rgba(229,152,155,0.3)",
-                borderRadius: 8,
-                color: "#D88A8A",
-                cursor: "pointer",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
-                fontSize: 11, fontWeight: 600
-              }}>
-                Salir
+            {(sideOpen || isMobile) ? (
+              <>
+                <button onClick={() => setSideOpen(o => !o)} style={{
+                  flex: 1, padding: 14, background: "transparent", border: "none",
+                  color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 14,
+                  textAlign: "left"
+                }}
+                  onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.6)"}
+                  onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}
+                >
+                  {sideOpen ? "◂ Colapsar" : "▸"}
+                </button>
+                <button onClick={logout} style={{
+                  padding: "8px 12px", marginRight: 10,
+                  background: "rgba(229,152,155,0.15)",
+                  border: "1px solid rgba(229,152,155,0.3)",
+                  borderRadius: 8,
+                  color: "#D88A8A",
+                  cursor: "pointer",
+                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontSize: 11, fontWeight: 600
+                }}>
+                  Salir
+                </button>
+              </>
+            ) : (
+              <button onClick={() => setSideOpen(true)} style={{
+                flex: 1, padding: 14, background: "transparent", border: "none",
+                color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 14,
+                textAlign: "center"
+              }}
+                onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.6)"}
+                onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}
+              >
+                ▸
               </button>
             )}
           </div>
         </aside>
+
+        {/* Overlay para móvil */}
+        {isMobile && mobileMenuOpen && (
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.4)',
+              zIndex: 999,
+              animation: 'fadeIn 0.2s ease'
+            }}
+          />
+        )}
 
         {/* MAIN CONTENT */}
         <main style={{ flex: 1, overflowY: "auto", minWidth: 0, background: T.bg }}>
@@ -1839,42 +1880,63 @@ export default function App() {
             background: "rgba(244,247,246,0.92)",
             backdropFilter: "blur(12px)",
             borderBottom: `1px solid ${T.border}`,
-            padding: "14px 32px",
+            padding: isMobile ? "10px 16px" : "14px 32px",
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            position: "sticky", top: 0, zIndex: 100
+            position: "sticky", top: 0, zIndex: 100,
+            flexWrap: "wrap",
+            gap: isMobile ? 6 : 0
           }}>
-            <div>
-              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.text, display: "flex", alignItems: "center", gap: 8 }}>
-                <span>{nav.find(n => n.id === view)?.icon}</span>
-                {nav.find(n => n.id === view)?.label}
-                {detailPat && view === "beneficiaries" && <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 16 }}>/ {detailPat.nombre} {detailPat.apellido}</span>}
-              </div>
-              <div style={{ fontSize: 11.5, color: T.textMuted, marginTop: 1 }}>
-                {new Date().toLocaleDateString("es-CL", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {isMobile && (
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    color: T.text,
+                    padding: '4px 8px'
+                  }}
+                >
+                  {mobileMenuOpen ? '✕' : '☰'}
+                </button>
+              )}
+              <div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: isMobile ? 16 : 20, fontWeight: 700, color: T.text, display: "flex", alignItems: "center", gap: 8 }}>
+                  <span>{nav.find(n => n.id === view)?.icon}</span>
+                  {nav.find(n => n.id === view)?.label}
+                  {detailPat && view === "beneficiaries" && <span style={{ color: T.textMuted, fontWeight: 400, fontSize: isMobile ? 13 : 16 }}>/ {detailPat.nombre}</span>}
+                </div>
+                <div style={{ fontSize: isMobile ? 10 : 11.5, color: T.textMuted, marginTop: isMobile ? 0 : 1 }}>
+                  {new Date().toLocaleDateString("es-CL", { weekday: isMobile ? "short" : "long", year: "numeric", month: "long", day: "numeric" })}
+                </div>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              {can(currentUser, "import") && <Btn variant="soft" onClick={() => setImportModal(true)} sm icon="📤">Importar</Btn>}
-              {view === "beneficiaries" && !detailPat && can(currentUser, "patients_add") && <Btn onClick={() => setPatModal("new")} icon="＋">Nuevo Beneficiario</Btn>}
-              {view === "donations" && can(currentUser, "donations_add") && <Btn variant="accent" onClick={() => setDonModal(true)} icon="＋">Registrar Donación</Btn>}
-              {view === "projects" && can(currentUser, "projects_add") && <Btn onClick={() => setProjModal("new")} icon="＋">Nuevo Proyecto</Btn>}
-              {view === "followups" && can(currentUser, "followups_add") && <Btn onClick={() => setFuModal("new")} icon="＋">Nuevo Seguimiento</Btn>}
-              {can(currentUser, "export") && <Btn variant="gold" onClick={exportExcel} sm icon="📥">Excel</Btn>}
-              {detailPat && can(currentUser, "patients_view") && (<Btn variant="accent" onClick={exportPDF} sm icon="📄">PDF</Btn>)}
+            <div style={{ display: "flex", gap: isMobile ? 4 : 10, alignItems: "center", flexWrap: "wrap" }}>
+              {can(currentUser, "import") && <Btn variant="soft" onClick={() => setImportModal(true)} sm icon="📤">{!isMobile && "Importar"}</Btn>}
+              {view === "beneficiaries" && !detailPat && can(currentUser, "patients_add") && <Btn onClick={() => setPatModal("new")} icon="＋">{!isMobile && "Nuevo Beneficiario"}</Btn>}
+              {view === "donations" && can(currentUser, "donations_add") && <Btn variant="accent" onClick={() => setDonModal(true)} icon="＋">{!isMobile && "Registrar Donación"}</Btn>}
+              {view === "projects" && can(currentUser, "projects_add") && <Btn onClick={() => setProjModal("new")} icon="＋">{!isMobile && "Nuevo Proyecto"}</Btn>}
+              {view === "followups" && can(currentUser, "followups_add") && <Btn onClick={() => setFuModal("new")} icon="＋">{!isMobile && "Nuevo Seguimiento"}</Btn>}
+              {can(currentUser, "export") && <Btn variant="gold" onClick={exportExcel} sm icon="📥">{!isMobile && "Excel"}</Btn>}
+              {detailPat && can(currentUser, "patients_view") && <Btn variant="accent" onClick={exportPDF} sm icon="📄">{!isMobile && "PDF"}</Btn>}
               <button onClick={() => setShowProfile(p => !p)} style={{
-                display: "flex", alignItems: "center", gap: 8,
+                display: "flex", alignItems: "center", gap: isMobile ? 4 : 8,
                 background: T.bgSoft, border: `1px solid ${T.border}`,
-                borderRadius: 11, padding: "7px 12px", cursor: "pointer",
+                borderRadius: 11, padding: isMobile ? "4px 8px" : "7px 12px", cursor: "pointer",
                 transition: "all 0.15s"
               }}
                 onMouseEnter={e => e.currentTarget.style.background = T.border}
                 onMouseLeave={e => e.currentTarget.style.background = T.bgSoft}
               >
-                <span style={{ fontSize: 15 }}>{roleInfo?.icon}</span>
-                <div style={{ textAlign: "left" }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: T.text }}>{currentUser.name.split(" ")[0]}</div>
-                  <div style={{ fontSize: 10, color: roleInfo?.color, fontWeight: 600 }}>{roleInfo?.label}</div>
-                </div>
+                <span style={{ fontSize: isMobile ? 12 : 15 }}>{roleInfo?.icon}</span>
+                {!isMobile && (
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: T.text }}>{currentUser.name.split(" ")[0]}</div>
+                    <div style={{ fontSize: 10, color: roleInfo?.color, fontWeight: 600 }}>{roleInfo?.label}</div>
+                  </div>
+                )}
               </button>
             </div>
           </header>
@@ -1883,24 +1945,24 @@ export default function App() {
             <>
               <div onClick={() => setShowProfile(false)} style={{ position: "fixed", inset: 0, zIndex: 199 }} />
               <div style={{
-                position: "fixed", top: 66, right: 28,
+                position: "fixed", top: isMobile ? 56 : 66, right: isMobile ? 10 : 28,
                 background: T.bgCard, border: `1px solid ${T.border}`,
-                borderRadius: 14, padding: 20,
+                borderRadius: 14, padding: isMobile ? 16 : 20,
                 boxShadow: "0 12px 40px rgba(0,0,0,0.12)",
-                zIndex: 200, minWidth: 260,
+                zIndex: 200, minWidth: isMobile ? 200 : 260,
                 animation: "fadeUp 0.15s ease"
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                   <div style={{
-                    width: 48, height: 48, borderRadius: "50%",
+                    width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: "50%",
                     background: roleInfo?.color + "22",
                     border: `2px solid ${roleInfo?.color}44`,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 22
+                    fontSize: isMobile ? 18 : 22
                   }}>{roleInfo?.icon}</div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: T.text }}>{currentUser.name}</div>
-                    <div style={{ fontSize: 12, color: T.textMuted }}>{currentUser.email}</div>
+                    <div style={{ fontWeight: 700, fontSize: isMobile ? 13 : 14, color: T.text }}>{currentUser.name}</div>
+                    <div style={{ fontSize: isMobile ? 11 : 12, color: T.textMuted }}>{currentUser.email}</div>
                     <Badge text={roleInfo?.label} color={roleInfo?.color} />
                   </div>
                 </div>
@@ -1920,34 +1982,34 @@ export default function App() {
             </>
           )}
 
-          <div style={{ padding: "28px 32px" }}>
+          <div style={{ padding: isMobile ? "12px 16px" : "28px 32px" }}>
             {/* --- DASHBOARD --- */}
             {view === "dashboard" && (
               <div style={{ animation: "fadeUp 0.3s ease" }}>
                 <div style={{
                   background: `linear-gradient(135deg, ${roleInfo?.color}12, ${roleInfo?.color}05)`,
                   border: `1px solid ${roleInfo?.color}22`,
-                  borderRadius: 13, padding: "14px 20px",
-                  marginBottom: 22,
-                  display: "flex", alignItems: "center", gap: 12
+                  borderRadius: 13, padding: isMobile ? "12px 16px" : "14px 20px",
+                  marginBottom: isMobile ? 16 : 22,
+                  display: "flex", alignItems: "center", gap: isMobile ? 8 : 12
                 }}>
-                  <span style={{ fontSize: 22 }}>{roleInfo?.icon}</span>
+                  <span style={{ fontSize: isMobile ? 18 : 22 }}>{roleInfo?.icon}</span>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: T.text }}>Hola, {currentUser.name.split(" ")[0]} 👋</div>
-                    <div style={{ fontSize: 12, color: T.textSub }}>Tienes acceso como <strong style={{ color: roleInfo?.color }}>{roleInfo?.label}</strong> · {Object.values(PERMS[currentUser.role] || {}).filter(Boolean).length} permisos activos</div>
+                    <div style={{ fontWeight: 700, fontSize: isMobile ? 13 : 14, color: T.text }}>Hola, {currentUser.name.split(" ")[0]} 👋</div>
+                    <div style={{ fontSize: isMobile ? 11 : 12, color: T.textSub }}>Tienes acceso como <strong style={{ color: roleInfo?.color }}>{roleInfo?.label}</strong> · {Object.values(PERMS[currentUser.role] || {}).filter(Boolean).length} permisos activos</div>
                   </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : (isMobile ? "1fr 1fr" : "repeat(4,1fr)"), gap: isMobile ? 12 : 16, marginBottom: isMobile ? 16 : 28 }}>
                   <StatCard icon="👥" label="Beneficiarios Activos" value={activeP} sub={`de ${beneficiaries.length} registrados`} color={T.primary} />
                   {can(currentUser, "donations_view") && <StatCard icon="💚" label="Total Donaciones" value={fmt(totalDon)} sub={`${donations.length} donaciones`} color={T.green} />}
                   {can(currentUser, "projects_view") && <StatCard icon="📁" label="Proyectos Activos" value={activePr} sub={`de ${projects.length} proyectos`} color={T.accent} />}
                   {can(currentUser, "followups_view") && <StatCard icon="📋" label="Seguimientos / Mes" value={fuMonth} sub={`${followups.length} histórico`} color={T.blue} />}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1.7fr 1fr", gap: 20, marginBottom: 20 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.7fr 1fr", gap: 20, marginBottom: 20 }}>
                   {can(currentUser, "donations_view") && (
-                    <Card style={{ padding: 24 }}>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Donaciones por Mes</div>
-                      <ResponsiveContainer width="100%" height={210}>
+                    <Card style={{ padding: isMobile ? 16 : 24 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15, marginBottom: isMobile ? 12 : 18 }}>Donaciones por Mes</div>
+                      <ResponsiveContainer width="100%" height={isMobile ? 180 : 210}>
                         <AreaChart data={donByMonth}>
                           <defs><linearGradient id="dg" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={T.accent} stopOpacity={0.3} /><stop offset="95%" stopColor={T.accent} stopOpacity={0} /></linearGradient></defs>
                           <CartesianGrid strokeDasharray="3 3" stroke={T.border} vertical={false} />
@@ -1959,38 +2021,38 @@ export default function App() {
                       </ResponsiveContainer>
                     </Card>
                   )}
-                  <Card style={{ padding: 24 }}>
-                    <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Beneficiarios por Tipo</div>
-                    <ResponsiveContainer width="100%" height={210}>
+                  <Card style={{ padding: isMobile ? 16 : 24 }}>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15, marginBottom: isMobile ? 12 : 18 }}>Beneficiarios por Tipo</div>
+                    <ResponsiveContainer width="100%" height={isMobile ? 180 : 210}>
                       <PieChart>
-                        <Pie data={discData} cx="50%" cy="50%" innerRadius={56} outerRadius={82} paddingAngle={3} dataKey="value">
+                        <Pie data={discData} cx="50%" cy="50%" innerRadius={isMobile ? 40 : 56} outerRadius={isMobile ? 60 : 82} paddingAngle={3} dataKey="value">
                           {discData.map((_, i) => <Cell key={i} fill={PIE[i % PIE.length]} />)}
                         </Pie>
-                        <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 11 }} />
+                        <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: isMobile ? 10 : 11 }} />
                         <Tooltip content={<TTip />} />
                       </PieChart>
                     </ResponsiveContainer>
                   </Card>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
                   {can(currentUser, "projects_view") && (
-                    <Card style={{ padding: 24 }}>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Avance de Proyectos</div>
+                    <Card style={{ padding: isMobile ? 16 : 24 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15, marginBottom: isMobile ? 12 : 18 }}>Avance de Proyectos</div>
                       {projects.map(p => {
                         const pct = Math.min(100, Math.round(p.recaudado / p.objetivo * 100));
                         return (
-                          <div key={p.id} style={{ marginBottom: 18 }}>
+                          <div key={p.id} style={{ marginBottom: isMobile ? 14 : 18 }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 7 }}>
                               <div>
-                                <div style={{ fontSize: 13, fontWeight: 600 }}>{p.nombre}</div>
-                                <div style={{ fontSize: 11, color: T.textMuted }}>{fmt(p.recaudado)} de {fmt(p.objetivo)}</div>
+                                <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 600 }}>{p.nombre}</div>
+                                <div style={{ fontSize: isMobile ? 10 : 11, color: T.textMuted }}>{fmt(p.recaudado)} de {fmt(p.objetivo)}</div>
                               </div>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <span style={{ fontSize: 13, fontWeight: 700, color: pct === 100 ? T.green : T.text }}>{pct}%</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8 }}>
+                                <span style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: pct === 100 ? T.green : T.text }}>{pct}%</span>
                                 {estadoBadge(p.estado)}
                               </div>
                             </div>
-                            <div style={{ height: 7, background: T.bgSoft, borderRadius: 8, overflow: "hidden" }}>
+                            <div style={{ height: isMobile ? 6 : 7, background: T.bgSoft, borderRadius: 8, overflow: "hidden" }}>
                               <div style={{ height: "100%", width: pct + "%", background: pct === 100 ? `linear-gradient(90deg, ${T.green}, ${T.primaryLt})` : `linear-gradient(90deg, ${T.primary}, ${T.accentLt})`, borderRadius: 8, transition: "width 0.7s ease" }} />
                             </div>
                           </div>
@@ -1999,21 +2061,21 @@ export default function App() {
                     </Card>
                   )}
                   {can(currentUser, "followups_view") && (
-                    <Card style={{ padding: 24 }}>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Últimos Seguimientos</div>
-                      {[...followups].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 5).map(f => {
+                    <Card style={{ padding: isMobile ? 16 : 24 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15, marginBottom: isMobile ? 12 : 18 }}>Últimos Seguimientos</div>
+                      {[...followups].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, isMobile ? 3 : 5).map(f => {
                         const pac = beneficiaries.find(p => p.id === f.beneficiarioId);
                         const rc = f.resultado === "Positivo" ? T.green : f.resultado === "Neutral" ? T.gold : T.red;
                         return (
-                          <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 12, paddingBottom: 13, marginBottom: 13, borderBottom: `1px solid ${T.border}` }}>
-                            <div style={{ width: 40, height: 40, borderRadius: 11, background: T.bgSoft, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0, border: `1px solid ${T.border}` }}>
+                          <div key={f.id} style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12, paddingBottom: isMobile ? 10 : 13, marginBottom: isMobile ? 10 : 13, borderBottom: `1px solid ${T.border}` }}>
+                            <div style={{ width: isMobile ? 32 : 40, height: isMobile ? 32 : 40, borderRadius: isMobile ? 8 : 11, background: T.bgSoft, display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? 14 : 17, flexShrink: 0, border: `1px solid ${T.border}` }}>
                               {{ Médico: "🏥", Terapia: "🧠", Educativo: "📚", Social: "🤝", Psicológico: "💬" }[f.tipo] || "📋"}
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pac ? `${pac.nombre} ${pac.apellido}` : "–"}</div>
-                              <div style={{ fontSize: 11, color: T.textMuted }}>{fmtD(f.fecha)} · {f.profesional}</div>
+                              <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pac ? `${pac.nombre} ${pac.apellido}` : "–"}</div>
+                              <div style={{ fontSize: isMobile ? 10 : 11, color: T.textMuted }}>{fmtD(f.fecha)} · {f.profesional}</div>
                             </div>
-                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: rc, flexShrink: 0, boxShadow: `0 0 6px ${rc}` }} />
+                            <div style={{ width: isMobile ? 6 : 8, height: isMobile ? 6 : 8, borderRadius: "50%", background: rc, flexShrink: 0, boxShadow: `0 0 6px ${rc}` }} />
                           </div>
                         );
                       })}
@@ -2023,22 +2085,22 @@ export default function App() {
               </div>
             )}
 
-            {/* --- PATIENTS LIST --- */}
+            {/* --- BENEFICIARIOS LIST --- */}
             {view === "beneficiaries" && !detailPat && (
               can(currentUser, "patients_view") ? (
                 <div style={{ animation: "fadeUp 0.3s ease" }}>
-                  <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-                    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍  Buscar por nombre, diagnóstico, tutor..." style={{ flex: 1, minWidth: 200, maxWidth: 380 }} />
-                    <select value={filterDisc} onChange={e=>setFilterDisc(e.target.value)} style={{ width:"auto", minWidth:160 }}>{discTypes.map(o=><option key={o}>{o}</option>)}</select>
-                    <select value={filterEst} onChange={e=>setFilterEst(e.target.value)} style={{ width:"auto", minWidth:130 }}>{["Todos","Activo","Inactivo"].map(o=><option key={o}>{o}</option>)}</select>
-                    <span style={{ fontSize:12, color:T.textMuted, whiteSpace:"nowrap" }}>{filtPat.length} resultado{filtPat.length !== 1 ? "s" : ""}</span>
+                  <div style={{ display: "flex", gap: isMobile ? 8 : 12, marginBottom: isMobile ? 12 : 20, flexWrap: "wrap", alignItems: "center" }}>
+                    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍  Buscar..." style={{ flex: 1, minWidth: isMobile ? 120 : 200, maxWidth: isMobile ? "100%" : 380 }} />
+                    <select value={filterDisc} onChange={e=>setFilterDisc(e.target.value)} style={{ width: isMobile ? "100%" : "auto", minWidth: isMobile ? "100%" : 160 }}>{discTypes.map(o=><option key={o}>{o}</option>)}</select>
+                    <select value={filterEst} onChange={e=>setFilterEst(e.target.value)} style={{ width: isMobile ? "100%" : "auto", minWidth: isMobile ? "100%" : 130 }}>{["Todos","Activo","Inactivo"].map(o=><option key={o}>{o}</option>)}</select>
+                    <span style={{ fontSize: isMobile ? 11 : 12, color: T.textMuted, whiteSpace: "nowrap" }}>{filtPat.length} resultado{filtPat.length !== 1 ? "s" : ""}</span>
                   </div>
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(290px,1fr))", gap:16 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : (isMobile ? "1fr 1fr" : "repeat(auto-fill,minmax(290px,1fr))"), gap: isMobile ? 12 : 16 }}>
                     {filtPat.map((p, i) => {
                       const di = { Física:"♿", Sensorial:"👁", Cognitiva:"🧩" }[p.condicion] || "🧩";
                       return (
                         <div key={p.id} onClick={() => setDetailPat(p)} style={{
-                          background: T.bgCard, borderRadius: 16, padding: 20,
+                          background: T.bgCard, borderRadius: 16, padding: isMobile ? 16 : 20,
                           boxShadow: "0 2px 14px rgba(0,0,0,0.055)", cursor: "pointer",
                           border: "1.5px solid transparent", transition: "all 0.18s",
                           animation: `fadeUp 0.3s ease ${i * 0.04}s both`
@@ -2046,25 +2108,25 @@ export default function App() {
                           onMouseEnter={e => { e.currentTarget.style.border = `1.5px solid ${T.primary}40`; e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,0,0,0.1)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
                           onMouseLeave={e => { e.currentTarget.style.border = "1.5px solid transparent"; e.currentTarget.style.boxShadow = "0 2px 14px rgba(0,0,0,0.055)"; e.currentTarget.style.transform = "none"; }}
                         >
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-                              <div style={{ width: 46, height: 46, borderRadius: 13, background: `${T.primary}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, border: `1px solid ${T.primary}20` }}>{di}</div>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: isMobile ? 10 : 14 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 11 }}>
+                              <div style={{ width: isMobile ? 38 : 46, height: isMobile ? 38 : 46, borderRadius: isMobile ? 10 : 13, background: `${T.primary}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? 16 : 20, border: `1px solid ${T.primary}20` }}>{di}</div>
                               <div>
-                                <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15 }}>{p.nombre} {p.apellido}</div>
-                                <div style={{ fontSize: 11, color: T.textMuted }}>{edad(p.fecha_nac)} años</div>
+                                <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15 }}>{p.nombre} {p.apellido}</div>
+                                <div style={{ fontSize: isMobile ? 10 : 11, color: T.textMuted }}>{edad(p.fecha_nac)} años</div>
                               </div>
                             </div>
                             {estadoBadge(p.estado)}
                           </div>
                           {[["Diagnóstico", p.diagnostico], ["Condicion", `${p.condicion} · Nivel ${p.nivel}`], ["Tutor", `${p.tutor} (${p.relacionTutor})`]].map(([k, v]) => (
-                            <div key={k} style={{ display: "flex", gap: 6, fontSize: 12, marginBottom: 4 }}>
+                            <div key={k} style={{ display: "flex", gap: isMobile ? 4 : 6, fontSize: isMobile ? 11 : 12, marginBottom: isMobile ? 2 : 4 }}>
                               <span style={{ color: T.primary, fontWeight: 600, flexShrink: 0 }}>{k}:</span>
                               <span style={{ color: T.textSub }}>{v}</span>
                             </div>
                           ))}
-                          <div style={{ marginTop: 13, paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>📅 Ingreso: {fmtD(p.fecha_ingreso)}</span>
-                            <span style={{ fontSize: 11, color: T.primary, fontWeight: 600 }}>Ver ficha →</span>
+                          <div style={{ marginTop: isMobile ? 10 : 13, paddingTop: isMobile ? 10 : 12, borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontSize: isMobile ? 10 : 11, color: T.textMuted }}>📅 Ingreso: {fmtD(p.fecha_ingreso)}</span>
+                            <span style={{ fontSize: isMobile ? 10 : 11, color: T.primary, fontWeight: 600 }}>Ver ficha →</span>
                           </div>
                         </div>
                       );
@@ -2082,77 +2144,77 @@ export default function App() {
               const patProj = projects.filter(pr => pr.beneficiarios && pr.beneficiarios.includes(p.id));
               return (
                 <div style={{ animation: "fadeUp 0.25s ease" }}>
-                  <button onClick={() => setDetailPat(null)} style={{ background: "none", border: "none", cursor: "pointer", color: T.primary, fontWeight: 600, fontSize: 13, marginBottom: 22, display: "flex", alignItems: "center", gap: 6 }}>← Volver a Beneficiarios</button>
-                  <div id="perfil-beneficiario" style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20 }}>
+                  <button onClick={() => setDetailPat(null)} style={{ background: "none", border: "none", cursor: "pointer", color: T.primary, fontWeight: 600, fontSize: isMobile ? 12 : 13, marginBottom: isMobile ? 16 : 22, display: "flex", alignItems: "center", gap: 6 }}>← Volver</button>
+                  <div id="perfil-beneficiario" style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "300px 1fr", gap: isMobile ? 16 : 20 }}>
                     <div>
-                      <Card style={{ padding: 24, marginBottom: 16 }}>
-                        <div style={{ textAlign: "center", marginBottom: 20 }}>
-                          <div style={{ width: 72, height: 72, borderRadius: 20, background: `${T.primary}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 12px", border: `1px solid ${T.primary}20` }}>{({ Física: "♿", Sensorial: "👁" })[p.condicion] || "🧩"}</div>
-                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700 }}>{p.nombre} {p.apellido}</div>
-                          <div style={{ color: T.textMuted, fontSize: 12, margin: "4px 0 10px" }}>{edad(p.fecha_nac)} años · {fmtD(p.fecha_nac)}</div>
+                      <Card style={{ padding: isMobile ? 16 : 24, marginBottom: isMobile ? 12 : 16 }}>
+                        <div style={{ textAlign: "center", marginBottom: isMobile ? 14 : 20 }}>
+                          <div style={{ width: isMobile ? 56 : 72, height: isMobile ? 56 : 72, borderRadius: isMobile ? 16 : 20, background: `${T.primary}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? 26 : 32, margin: "0 auto 10px", border: `1px solid ${T.primary}20` }}>{({ Física: "♿", Sensorial: "👁" })[p.condicion] || "🧩"}</div>
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: isMobile ? 18 : 20, fontWeight: 700 }}>{p.nombre} {p.apellido}</div>
+                          <div style={{ color: T.textMuted, fontSize: isMobile ? 11 : 12, margin: "4px 0 8px" }}>{edad(p.fecha_nac)} años · {fmtD(p.fecha_nac)}</div>
                           {estadoBadge(p.estado)}
                         </div>
                         {[["Diagnóstico", p.diagnostico], ["Condicion", p.condicion], ["Nivel de Apoyo", p.nivel], ["Teléfono", p.telefono], ["Email", p.email || "–"], ["Dirección", p.direccion], ["Ingreso", fmtD(p.fecha_ingreso)]].map(([k, v]) => (
-                          <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${T.border}`, fontSize: 12.5 }}>
+                          <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.border}`, fontSize: isMobile ? 11.5 : 12.5 }}>
                             <span style={{ color: T.textMuted, fontWeight: 500 }}>{k}</span>
                             <span style={{ color: T.text, fontWeight: 600, textAlign: "right", maxWidth: "58%" }}>{v}</span>
                           </div>
                         ))}
-                        <div style={{ marginTop: 16, background: T.bgSoft, borderRadius: 11, padding: 14 }}>
-                          <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Tutor / Representante</div>
-                          <div style={{ fontWeight: 700, fontSize: 13 }}>{p.tutor}</div>
-                          <div style={{ fontSize: 12, color: T.textMuted }}>{p.relacionTutor} · {p.telefonoTutor}</div>
+                        <div style={{ marginTop: isMobile ? 12 : 16, background: T.bgSoft, borderRadius: 11, padding: isMobile ? 12 : 14 }}>
+                          <div style={{ fontSize: isMobile ? 9 : 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Tutor / Representante</div>
+                          <div style={{ fontWeight: 700, fontSize: isMobile ? 14 : 13 }}>{p.tutor}</div>
+                          <div style={{ fontSize: isMobile ? 11 : 12, color: T.textMuted }}>{p.relacionTutor} · {p.telefonoTutor}</div>
                         </div>
-                        {p.notas && <div style={{ marginTop: 12, padding: 12, background: T.accent + "10", borderRadius: 10, fontSize: 12, borderLeft: `3px solid ${T.accent}` }}>{p.notas}</div>}
+                        {p.notas && <div style={{ marginTop: isMobile ? 10 : 12, padding: isMobile ? 10 : 12, background: T.accent + "10", borderRadius: 10, fontSize: isMobile ? 11 : 12, borderLeft: `3px solid ${T.accent}` }}>{p.notas}</div>}
                         {(can(currentUser, "patients_edit") || can(currentUser, "patients_del")) && (
                           <div style={{ 
-                            marginTop: 16, 
+                            marginTop: isMobile ? 12 : 16, 
                             display: "flex", 
-                            gap: 8, 
+                            gap: isMobile ? 6 : 8, 
                             flexWrap: "wrap",
                             visibility: isExporting ? "hidden" : "visible" 
                           }}>
-                            {can(currentUser, "patients_edit") && <Btn sm onClick={() => setPatModal(p)} icon="✏️">Editar</Btn>}
-                            {can(currentUser, "patients_del") && <Btn sm variant="danger" onClick={() => delPat(p.id)} icon="🗑">Eliminar</Btn>}
+                            {can(currentUser, "patients_edit") && <Btn sm onClick={() => setPatModal(p)} icon="✏️">{!isMobile && "Editar"}</Btn>}
+                            {can(currentUser, "patients_del") && <Btn sm variant="danger" onClick={() => delPat(p.id)} icon="🗑">{!isMobile && "Eliminar"}</Btn>}
                           </div>
                         )}
                       </Card>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 12 : 16 }}>
                       {can(currentUser, "followups_view") && (
-                        <Card style={{ padding: 20 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                            <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15 }}>Seguimientos <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>({patFu.length})</span></div>
-                            {can(currentUser, "followups_add") && <Btn sm onClick={() => setFuModal({ beneficiarioId: p.id })} icon="＋">Agregar</Btn>}
+                        <Card style={{ padding: isMobile ? 16 : 20 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isMobile ? 12 : 16 }}>
+                            <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15 }}>Seguimientos <span style={{ color: T.textMuted, fontWeight: 400, fontSize: isMobile ? 12 : 13 }}>({patFu.length})</span></div>
+                            {can(currentUser, "followups_add") && <Btn sm onClick={() => setFuModal({ beneficiarioId: p.id })} icon="＋">{!isMobile && "Agregar"}</Btn>}
                           </div>
-                          {patFu.length === 0 ? <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: 20 }}>Sin seguimientos registrados</div> :
+                          {patFu.length === 0 ? <div style={{ color: T.textMuted, fontSize: isMobile ? 12 : 13, textAlign: "center", padding: isMobile ? 12 : 20 }}>Sin seguimientos registrados</div> :
                             patFu.sort((a, b) => b.fecha.localeCompare(a.fecha)).map(f => (
-                              <div key={f.id} style={{ display: "flex", gap: 12, paddingBottom: 13, marginBottom: 13, borderBottom: `1px solid ${T.border}` }}>
+                              <div key={f.id} style={{ display: "flex", gap: isMobile ? 8 : 12, paddingBottom: isMobile ? 10 : 13, marginBottom: isMobile ? 10 : 13, borderBottom: `1px solid ${T.border}` }}>
                                 <div style={{ flex: 1 }}>
-                                  <div style={{ display: "flex", gap: 7, alignItems: "center", marginBottom: 5, flexWrap: "wrap" }}>
+                                  <div style={{ display: "flex", gap: isMobile ? 4 : 7, alignItems: "center", marginBottom: isMobile ? 3 : 5, flexWrap: "wrap" }}>
                                     {tipoBadge(f.tipo)}
-                                    <span style={{ fontSize: 11, color: T.textMuted }}>{fmtD(f.fecha)}</span>
+                                    <span style={{ fontSize: isMobile ? 10 : 11, color: T.textMuted }}>{fmtD(f.fecha)}</span>
                                     <Badge text={f.resultado} color={f.resultado === "Positivo" ? T.green : f.resultado === "Neutral" ? T.gold : T.red} />
                                   </div>
-                                  <div style={{ fontSize: 12.5, lineHeight: 1.5 }}>{f.descripcion}</div>
-                                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{f.profesional} · Próx: {fmtD(f.proxima)}</div>
+                                  <div style={{ fontSize: isMobile ? 11.5 : 12.5, lineHeight: 1.5 }}>{f.descripcion}</div>
+                                  <div style={{ fontSize: isMobile ? 10 : 11, color: T.textMuted, marginTop: isMobile ? 2 : 4 }}>{f.profesional} · Próx: {fmtD(f.proxima)}</div>
                                 </div>
                                 {can(currentUser, "followups_edit") && (
-                                  <button onClick={() => delFu(f.id)} style={{ background: "none", border: "none", cursor: "pointer", color: T.red, fontSize: 14, padding: "0 4px", opacity: 0.6 }}>✕</button>
+                                  <button onClick={() => delFu(f.id)} style={{ background: "none", border: "none", cursor: "pointer", color: T.red, fontSize: isMobile ? 12 : 14, padding: "0 4px", opacity: 0.6 }}>✕</button>
                                 )}
                               </div>
                             ))
                           }
                         </Card>
                       )}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 12 : 16 }}>
                         {can(currentUser, "projects_view") && (
-                          <Card style={{ padding: 20 }}>
-                            <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Proyectos ({patProj.length})</div>
-                            {patProj.length === 0 ? <div style={{ color: T.textMuted, fontSize: 12, textAlign: "center", padding: 12 }}>No asignado a proyectos</div> :
+                          <Card style={{ padding: isMobile ? 16 : 20 }}>
+                            <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 13 : 14, marginBottom: isMobile ? 10 : 14 }}>Proyectos ({patProj.length})</div>
+                            {patProj.length === 0 ? <div style={{ color: T.textMuted, fontSize: isMobile ? 11 : 12, textAlign: "center", padding: isMobile ? 8 : 12 }}>No asignado</div> :
                               patProj.map(pr => (
-                                <div key={pr.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: `1px solid ${T.border}`, fontSize: 12 }}>
-                                  <div><div style={{ fontWeight: 600 }}>{pr.nombre}</div><div style={{ fontSize: 11, color: T.textMuted }}>{fmt(pr.recaudado)} / {fmt(pr.objetivo)}</div></div>
+                                <div key={pr.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: `1px solid ${T.border}`, fontSize: isMobile ? 11 : 12 }}>
+                                  <div><div style={{ fontWeight: 600 }}>{pr.nombre}</div><div style={{ fontSize: isMobile ? 10 : 11, color: T.textMuted }}>{fmt(pr.recaudado)} / {fmt(pr.objetivo)}</div></div>
                                   {estadoBadge(pr.estado)}
                                 </div>
                               ))
@@ -2160,17 +2222,17 @@ export default function App() {
                           </Card>
                         )}
                         {can(currentUser, "donations_view") && (
-                          <Card style={{ padding: 20 }}>
-                            <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Donaciones Familiares ({patDon.length})</div>
-                            {patDon.length === 0 ? <div style={{ color: T.textMuted, fontSize: 12, textAlign: "center", padding: 12 }}>Sin donaciones</div> :
+                          <Card style={{ padding: isMobile ? 16 : 20 }}>
+                            <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 13 : 14, marginBottom: isMobile ? 10 : 14 }}>Donaciones ({patDon.length})</div>
+                            {patDon.length === 0 ? <div style={{ color: T.textMuted, fontSize: isMobile ? 11 : 12, textAlign: "center", padding: isMobile ? 8 : 12 }}>Sin donaciones</div> :
                               patDon.map(d => (
-                                <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: `1px solid ${T.border}`, fontSize: 12 }}>
-                                  <div><div style={{ fontWeight: 600 }}>{d.donante}</div><div style={{ fontSize: 11, color: T.textMuted }}>{fmtD(d.fecha)}</div></div>
+                                <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.border}`, fontSize: isMobile ? 11 : 12 }}>
+                                  <div><div style={{ fontWeight: 600 }}>{d.donante}</div><div style={{ fontSize: isMobile ? 10 : 11, color: T.textMuted }}>{fmtD(d.fecha)}</div></div>
                                   <div style={{ fontWeight: 700, color: T.green }}>{fmt(d.monto)}</div>
                                 </div>
                               ))
                             }
-                            {patDon.length > 0 && <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, color: T.green, marginTop: 10 }}>Total: {fmt(patDon.reduce((s, d) => s + d.monto, 0))}</div>}
+                            {patDon.length > 0 && <div style={{ textAlign: "right", fontSize: isMobile ? 12 : 13, fontWeight: 700, color: T.green, marginTop: isMobile ? 6 : 10 }}>Total: {fmt(patDon.reduce((s, d) => s + d.monto, 0))}</div>}
                           </Card>
                         )}
                       </div>
@@ -2184,44 +2246,43 @@ export default function App() {
             {view === "donations" && (
               can(currentUser, "donations_view") ? (
                 <div style={{ animation: "fadeUp 0.3s ease" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 24 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: isMobile ? 12 : 16, marginBottom: isMobile ? 16 : 24 }}>
                     <StatCard icon="💰" label="Total Recaudado" value={fmt(totalDon)} color={T.green} />
                     <StatCard icon="👨‍👩‍👦" label="Donaciones Familiares" value={fmt(donations.filter(d => d.relacion === "Familiar").reduce((s, d) => s + d.monto, 0))} sub={`${donations.filter(d => d.relacion === "Familiar").length} donaciones`} color={T.primary} />
                     <StatCard icon="🏢" label="Donaciones Externas/Corp." value={fmt(donations.filter(d => d.relacion !== "Familiar").reduce((s, d) => s + d.monto, 0))} sub={`${donations.filter(d => d.relacion !== "Familiar").length} donaciones`} color={T.accent} />
                   </div>
                   <Card style={{ overflow: "hidden" }}>
-                    <div style={{ padding: "16px 22px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15 }}>Registro de Donaciones</div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: T.textMuted }}>
+                    <div style={{ padding: isMobile ? "12px 16px" : "16px 22px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: isMobile ? 6 : 0 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15 }}>Registro de Donaciones</div>
+                      <div style={{ fontSize: isMobile ? 10 : 12, color: T.textMuted, display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.textMuted, display: "inline-block" }} />
-                        Solo lectura · Para modificar, contacta al administrador
+                        Solo lectura
                       </div>
                     </div>
                     <div style={{ overflowX: "auto" }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: isMobile ? 600 : "100%" }}>
                         <thead>
                           <tr style={{ background: T.bgSoft }}>
-                            {["Donante", "Relación", "Beneficiario", "Monto", "Fecha", "Tipo", "Proyecto", "Notas"].map(h => (
-                              <th key={h} style={{ padding: "11px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
+                            {["Donante", "Relación", "Beneficiario", "Monto", "Fecha", "Tipo", "Proyecto"].map(h => (
+                              <th key={h} style={{ padding: isMobile ? "8px 12px" : "11px 16px", textAlign: "left", fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {[...donations].sort((a, b) => b.fecha.localeCompare(a.fecha)).map(d => {
+                          {[...donations].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, isMobile ? 20 : 100).map(d => {
                             const pac = beneficiaries.find(p => p.id === d.beneficiarioId);
                             const proj = projects.find(p => p.id === d.proyectoId);
                             return (
                               <tr key={d.id} style={{ borderBottom: `1px solid ${T.border}` }}
                                 onMouseEnter={e => e.currentTarget.style.background = T.bgSoft}
                                 onMouseLeave={e => e.currentTarget.style.background = ""}>
-                                <td style={{ padding: "12px 16px", fontWeight: 600, fontSize: 13 }}>{d.donante}</td>
-                                <td style={{ padding: "12px 16px" }}><Badge text={d.relacion} color={d.relacion === "Familiar" ? T.primary : d.relacion === "Corporativo" ? T.blue : T.accent} /></td>
-                                <td style={{ padding: "12px 16px", fontSize: 12, color: T.textMuted }}>{pac ? `${pac.nombre} ${pac.apellido}` : "–"}</td>
-                                <td style={{ padding: "12px 16px", fontWeight: 700, color: T.green, fontSize: 14 }}>{fmt(d.monto)}</td>
-                                <td style={{ padding: "12px 16px", fontSize: 12, color: T.textMuted, whiteSpace: "nowrap" }}>{fmtD(d.fecha)}</td>
-                                <td style={{ padding: "12px 16px", fontSize: 12 }}>{d.tipo}</td>
-                                <td style={{ padding: "12px 16px", fontSize: 12, color: T.textMuted, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{proj ? proj.nombre : "–"}</td>
-                                <td style={{ padding: "12px 16px", fontSize: 11, color: T.textMuted, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.notas || "–"}</td>
+                                <td style={{ padding: isMobile ? "8px 12px" : "12px 16px", fontWeight: 600, fontSize: isMobile ? 12 : 13 }}>{d.donante}</td>
+                                <td style={{ padding: isMobile ? "8px 12px" : "12px 16px" }}><Badge text={d.relacion} color={d.relacion === "Familiar" ? T.primary : d.relacion === "Corporativo" ? T.blue : T.accent} /></td>
+                                <td style={{ padding: isMobile ? "8px 12px" : "12px 16px", fontSize: isMobile ? 11 : 12, color: T.textMuted }}>{pac ? `${pac.nombre} ${pac.apellido}` : "–"}</td>
+                                <td style={{ padding: isMobile ? "8px 12px" : "12px 16px", fontWeight: 700, color: T.green, fontSize: isMobile ? 13 : 14 }}>{fmt(d.monto)}</td>
+                                <td style={{ padding: isMobile ? "8px 12px" : "12px 16px", fontSize: isMobile ? 11 : 12, color: T.textMuted, whiteSpace: "nowrap" }}>{fmtD(d.fecha)}</td>
+                                <td style={{ padding: isMobile ? "8px 12px" : "12px 16px", fontSize: isMobile ? 11 : 12 }}>{d.tipo}</td>
+                                <td style={{ padding: isMobile ? "8px 12px" : "12px 16px", fontSize: isMobile ? 11 : 12, color: T.textMuted, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{proj ? proj.nombre : "–"}</td>
                               </tr>
                             );
                           })}
@@ -2236,43 +2297,43 @@ export default function App() {
             {/* --- PROJECTS --- */}
             {view === "projects" && (
               can(currentUser, "projects_view") ? (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(330px,1fr))", gap: 20, animation: "fadeUp 0.3s ease" }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : (isMobile ? "1fr 1fr" : "repeat(auto-fill,minmax(330px,1fr))"), gap: isMobile ? 12 : 20, animation: "fadeUp 0.3s ease" }}>
                   {projects.map(p => {
                     const pct = Math.min(100, Math.round(p.recaudado / p.objetivo * 100));
                     const bens = beneficiaries.filter(x => p.beneficiarios && p.beneficiarios.includes(x.id));
                     const pDon = donations.filter(d => d.proyectoId === p.id);
                     return (
                       <Card key={p.id} style={{ overflow: "hidden" }}>
-                        <div style={{ height: 4, background: `linear-gradient(90deg, ${T.primary}, ${T.accent})` }} />
-                        <div style={{ padding: "20px 22px 16px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                            <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 17, flex: 1, lineHeight: 1.3 }}>{p.nombre}</div>
+                        <div style={{ height: isMobile ? 3 : 4, background: `linear-gradient(90deg, ${T.primary}, ${T.accent})` }} />
+                        <div style={{ padding: isMobile ? "16px" : "20px 22px 16px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: isMobile ? 6 : 10 }}>
+                            <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 15 : 17, flex: 1, lineHeight: 1.3 }}>{p.nombre}</div>
                             {estadoBadge(p.estado)}
                           </div>
-                          <div style={{ fontSize: 12.5, color: T.textSub, lineHeight: 1.6, marginBottom: 16 }}>{p.descripcion}</div>
-                          <div style={{ marginBottom: 14 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 7 }}>
+                          <div style={{ fontSize: isMobile ? 11.5 : 12.5, color: T.textSub, lineHeight: 1.6, marginBottom: isMobile ? 12 : 16 }}>{p.descripcion}</div>
+                          <div style={{ marginBottom: isMobile ? 10 : 14 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: isMobile ? 11 : 12, marginBottom: 7 }}>
                               <span style={{ color: T.textMuted }}>Recaudado</span>
                               <span style={{ fontWeight: 700, color: pct === 100 ? T.green : T.text }}>{fmt(p.recaudado)} <span style={{ color: T.textMuted, fontWeight: 400 }}>/ {fmt(p.objetivo)}</span></span>
                             </div>
-                            <div style={{ height: 9, background: T.bgSoft, borderRadius: 9, overflow: "hidden" }}>
+                            <div style={{ height: isMobile ? 7 : 9, background: T.bgSoft, borderRadius: 9, overflow: "hidden" }}>
                               <div style={{ height: "100%", width: pct + "%", background: pct === 100 ? `linear-gradient(90deg, ${T.green}, ${T.primaryLt})` : `linear-gradient(90deg, ${T.primary}, ${T.accentLt})`, borderRadius: 9, transition: "width 0.7s ease" }} />
                             </div>
-                            <div style={{ textAlign: "right", fontSize: 11, color: pct === 100 ? T.green : T.textMuted, marginTop: 4, fontWeight: 600 }}>{pct}% completado</div>
+                            <div style={{ textAlign: "right", fontSize: isMobile ? 10 : 11, color: pct === 100 ? T.green : T.textMuted, marginTop: 4, fontWeight: 600 }}>{pct}% completado</div>
                           </div>
-                          <div style={{ display: "flex", gap: 14, fontSize: 11.5, color: T.textMuted }}>
+                          <div style={{ display: "flex", gap: isMobile ? 8 : 14, fontSize: isMobile ? 10.5 : 11.5, color: T.textMuted, flexWrap: "wrap" }}>
                             <span>📅 {fmtD(p.inicio)} – {fmtD(p.fin)}</span>
                             <span>💚 {pDon.length} donaciones · {fmt(pDon.reduce((s, d) => s + d.monto, 0))}</span>
                           </div>
                         </div>
-                        {bens.length > 0 && <div style={{ padding: "12px 22px", background: T.bgSoft, borderTop: `1px solid ${T.border}` }}>
-                          <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Beneficiarios</div>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{bens.map(b => <Badge key={b.id} text={`${b.nombre} ${b.apellido}`} color={T.primary} />)}</div>
+                        {bens.length > 0 && <div style={{ padding: isMobile ? "10px 16px" : "12px 22px", background: T.bgSoft, borderTop: `1px solid ${T.border}` }}>
+                          <div style={{ fontSize: isMobile ? 9 : 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: isMobile ? 4 : 8 }}>Beneficiarios</div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 4 : 6 }}>{bens.map(b => <Badge key={b.id} text={`${b.nombre}`} color={T.primary} />)}</div>
                         </div>}
                         {can(currentUser, "projects_add") && (
-                          <div style={{ padding: "12px 22px", borderTop: `1px solid ${T.border}`, display: "flex", gap: 8 }}>
-                            <Btn sm onClick={() => setProjModal(p)} icon="✏️">Editar</Btn>
-                            <Btn sm variant="danger" onClick={() => delProj(p.id)}>🗑</Btn>
+                          <div style={{ padding: isMobile ? "10px 16px" : "12px 22px", borderTop: `1px solid ${T.border}`, display: "flex", gap: isMobile ? 4 : 8 }}>
+                            <Btn sm onClick={() => setProjModal(p)} icon="✏️">{!isMobile && "Editar"}</Btn>
+                            <Btn sm variant="danger" onClick={() => delProj(p.id)}>{!isMobile && "🗑"}</Btn>
                           </div>
                         )}
                       </Card>
@@ -2282,30 +2343,30 @@ export default function App() {
               ) : <AccessDenied />
             )}
 
-            {/* --- FOLLOWUPS (MEJORADO) --- */}
+            {/* --- FOLLOWUPS --- */}
             {view === "followups" && (
               can(currentUser, "followups_view") ? (
                 <div style={{ animation: "fadeUp 0.3s ease" }}>
-                  <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: isMobile ? 8 : 12, marginBottom: isMobile ? 12 : 20, flexWrap: "wrap", alignItems: "center" }}>
                     <select
                       value={filterFuPatient}
                       onChange={e => setFilterFuPatient(e.target.value)}
-                      style={{ width: "auto", minWidth: 180 }}
+                      style={{ width: isMobile ? "100%" : "auto", minWidth: isMobile ? "100%" : 180 }}
                     >
                       <option value="Todos">Todos los Beneficiarios</option>
                       {beneficiaries.map(p => (
                         <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>
                       ))}
                     </select>
-                    <span style={{ fontSize: 12, color: T.textMuted }}>
+                    <span style={{ fontSize: isMobile ? 11 : 12, color: T.textMuted }}>
                       {followups.filter(f => filterFuPatient === "Todos" || f.beneficiarioId === parseInt(filterFuPatient)).length} seguimientos
                     </span>
                     {can(currentUser, "followups_add") && (
-                      <Btn onClick={() => setFuModal("new")} icon="＋">Nuevo Seguimiento</Btn>
+                      <Btn onClick={() => setFuModal("new")} icon="＋">{!isMobile && "Nuevo Seguimiento"}</Btn>
                     )}
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(290px,1fr))", gap: 16 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : (isMobile ? "1fr 1fr" : "repeat(auto-fill,minmax(290px,1fr))"), gap: isMobile ? 12 : 16 }}>
                     {[...followups]
                       .filter(f => filterFuPatient === "Todos" || f.beneficiarioId === parseInt(filterFuPatient))
                       .sort((a, b) => b.fecha.localeCompare(a.fecha))
@@ -2315,27 +2376,27 @@ export default function App() {
                         const rc = f.resultado === "Positivo" ? T.green : f.resultado === "Neutral" ? T.gold : T.red;
                         return (
                           <Card key={f.id} style={{ borderTop: `3px solid ${tc}`, overflow: "hidden", animation: `fadeUp 0.3s ease ${i * 0.04}s both` }}>
-                            <div style={{ padding: "18px 20px" }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                            <div style={{ padding: isMobile ? "14px 16px" : "18px 20px" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: isMobile ? 8 : 12 }}>
                                 <div>
-                                  <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15 }}>{pac ? `${pac.nombre} ${pac.apellido}` : "–"}</div>
-                                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{fmtD(f.fecha)}</div>
+                                  <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15 }}>{pac ? `${pac.nombre} ${pac.apellido}` : "–"}</div>
+                                  <div style={{ fontSize: isMobile ? 10 : 11, color: T.textMuted, marginTop: 2 }}>{fmtD(f.fecha)}</div>
                                 </div>
-                                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: isMobile ? 3 : 5 }}>
                                   {tipoBadge(f.tipo)}
                                   <Badge text={f.resultado} color={rc} />
                                 </div>
                               </div>
-                              <div style={{ fontSize: 12.5, color: T.text, lineHeight: 1.6, marginBottom: 12 }}>{f.descripcion}</div>
-                              <div style={{ fontSize: 11.5, color: T.textMuted, paddingTop: 11, borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between" }}>
+                              <div style={{ fontSize: isMobile ? 11.5 : 12.5, color: T.text, lineHeight: 1.6, marginBottom: isMobile ? 8 : 12 }}>{f.descripcion}</div>
+                              <div style={{ fontSize: isMobile ? 10.5 : 11.5, color: T.textMuted, paddingTop: isMobile ? 8 : 11, borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between" }}>
                                 <span>👤 {f.profesional}</span>
                                 <span>Próx: {fmtD(f.proxima)}</span>
                               </div>
                             </div>
                             {can(currentUser, "followups_edit") && (
-                              <div style={{ padding: "10px 20px 14px", display: "flex", gap: 8 }}>
-                                <Btn sm onClick={() => setFuModal(f)} icon="✏️">Editar</Btn>
-                                <Btn sm variant="danger" onClick={() => delFu(f.id)}>🗑</Btn>
+                              <div style={{ padding: isMobile ? "8px 16px 12px" : "10px 20px 14px", display: "flex", gap: isMobile ? 4 : 8 }}>
+                                <Btn sm onClick={() => setFuModal(f)} icon="✏️">{!isMobile && "Editar"}</Btn>
+                                <Btn sm variant="danger" onClick={() => delFu(f.id)}>{!isMobile && "🗑"}</Btn>
                               </div>
                             )}
                           </Card>
@@ -2350,24 +2411,24 @@ export default function App() {
             {view === "stats" && (
               can(currentUser, "stats") ? (
                 <div style={{ animation: "fadeUp 0.3s ease" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
-                    <Card style={{ padding: 24 }}>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Seguimientos por Tipo</div>
-                      <ResponsiveContainer width="100%" height={220}>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 12 : 20, marginBottom: isMobile ? 12 : 20 }}>
+                    <Card style={{ padding: isMobile ? 16 : 24 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15, marginBottom: isMobile ? 12 : 18 }}>Seguimientos por Tipo</div>
+                      <ResponsiveContainer width="100%" height={isMobile ? 180 : 220}>
                         <BarChart data={fuByType} layout="vertical">
                           <CartesianGrid strokeDasharray="3 3" stroke={T.border} horizontal={false} />
                           <XAxis type="number" tick={{ fontSize: 11, fill: T.textMuted }} axisLine={false} tickLine={false} />
-                          <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: T.text }} width={82} axisLine={false} tickLine={false} />
+                          <YAxis type="category" dataKey="name" tick={{ fontSize: isMobile ? 10 : 12, fill: T.text }} width={isMobile ? 60 : 82} axisLine={false} tickLine={false} />
                           <Tooltip content={<TTip />} />
                           <Bar dataKey="value" name="Cantidad" fill={T.primary} radius={[0, 7, 7, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </Card>
-                    <Card style={{ padding: 24 }}>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Resultados de Seguimientos</div>
-                      <ResponsiveContainer width="100%" height={220}>
+                    <Card style={{ padding: isMobile ? 16 : 24 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15, marginBottom: isMobile ? 12 : 18 }}>Resultados de Seguimientos</div>
+                      <ResponsiveContainer width="100%" height={isMobile ? 180 : 220}>
                         <PieChart>
-                          <Pie data={resultData} cx="50%" cy="50%" outerRadius={82} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                          <Pie data={resultData} cx="50%" cy="50%" outerRadius={isMobile ? 60 : 82} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
                             {resultData.map((_, i) => <Cell key={i} fill={[T.green, T.gold, T.red][i]} />)}
                           </Pie>
                           <Tooltip content={<TTip />} />
@@ -2375,46 +2436,46 @@ export default function App() {
                       </ResponsiveContainer>
                     </Card>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 20, marginBottom: 20 }}>
-                    <Card style={{ padding: 24 }}>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Meta vs. Recaudado por Proyecto</div>
-                      <ResponsiveContainer width="100%" height={220}>
-                        <BarChart data={projects.map(p => ({ name: p.nombre.split(" ").slice(0, 3).join(" "), meta: p.objetivo, recaudado: p.recaudado }))}>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.5fr 1fr", gap: isMobile ? 12 : 20, marginBottom: isMobile ? 12 : 20 }}>
+                    <Card style={{ padding: isMobile ? 16 : 24 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15, marginBottom: isMobile ? 12 : 18 }}>Meta vs. Recaudado</div>
+                      <ResponsiveContainer width="100%" height={isMobile ? 180 : 220}>
+                        <BarChart data={projects.map(p => ({ name: p.nombre.split(" ").slice(0, 2).join(" "), meta: p.objetivo, recaudado: p.recaudado }))}>
                           <CartesianGrid strokeDasharray="3 3" stroke={T.border} vertical={false} />
-                          <XAxis dataKey="name" tick={{ fontSize: 10, fill: T.textMuted }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fontSize: 11, fill: T.textMuted }} axisLine={false} tickLine={false} />
+                          <XAxis dataKey="name" tick={{ fontSize: isMobile ? 9 : 10, fill: T.textMuted }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: isMobile ? 10 : 11, fill: T.textMuted }} axisLine={false} tickLine={false} />
                           <Tooltip content={<TTip />} />
-                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                          <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                           <Bar dataKey="meta" name="Meta" fill={T.border} radius={[4, 4, 0, 0]} />
                           <Bar dataKey="recaudado" name="Recaudado" fill={T.primary} radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </Card>
-                    <Card style={{ padding: 24 }}>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Donaciones por Tipo de Pago</div>
-                      <ResponsiveContainer width="100%" height={220}>
+                    <Card style={{ padding: isMobile ? 16 : 24 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15, marginBottom: isMobile ? 12 : 18 }}>Donaciones por Tipo de Pago</div>
+                      <ResponsiveContainer width="100%" height={isMobile ? 180 : 220}>
                         <PieChart>
                           <Pie data={(() => { const c = {}; donations.forEach(d => { c[d.tipo] = (c[d.tipo] || 0) + d.monto; }); return Object.entries(c).map(([n, v]) => ({ name: n, value: v })); })()}
-                            cx="50%" cy="50%" outerRadius={82} innerRadius={42} dataKey="value">
+                            cx="50%" cy="50%" outerRadius={isMobile ? 60 : 82} innerRadius={isMobile ? 30 : 42} dataKey="value">
                             {PIE.map((color, i) => <Cell key={i} fill={color} />)}
                           </Pie>
-                          <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
+                          <Legend iconType="circle" iconSize={isMobile ? 6 : 8} wrapperStyle={{ fontSize: isMobile ? 10 : 11 }} />
                           <Tooltip formatter={v => fmt(v)} content={<TTip />} />
                         </PieChart>
                       </ResponsiveContainer>
                     </Card>
                   </div>
                   <Card style={{ overflow: "hidden" }}>
-                    <div style={{ padding: "18px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15 }}>Resumen por Beneficiario</div>
-                      {can(currentUser, "export") && <Btn sm variant="gold" onClick={exportExcel} icon="📥">Exportar Excel</Btn>}
+                    <div style={{ padding: isMobile ? "12px 16px" : "18px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: isMobile ? 6 : 0 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15 }}>Resumen por Beneficiario</div>
+                      {can(currentUser, "export") && <Btn sm variant="gold" onClick={exportExcel} icon="📥">{!isMobile && "Exportar Excel"}</Btn>}
                     </div>
                     <div style={{ overflowX: "auto" }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: isMobile ? 600 : "100%" }}>
                         <thead>
                           <tr style={{ background: T.bgSoft }}>
                             {["Beneficiario", "Condicion", "Nivel", "Seguimientos", "Donaciones ($)", "Proyectos", "Estado"].map(h => (
-                              <th key={h} style={{ padding: "11px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
+                              <th key={h} style={{ padding: isMobile ? "8px 12px" : "11px 16px", textAlign: "left", fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
@@ -2423,13 +2484,13 @@ export default function App() {
                             <tr key={p.id} style={{ borderBottom: `1px solid ${T.border}` }}
                               onMouseEnter={e => e.currentTarget.style.background = T.bgSoft}
                               onMouseLeave={e => e.currentTarget.style.background = ""}>
-                              <td style={{ padding: "11px 16px", fontWeight: 600, fontSize: 13 }}>{p.nombre} {p.apellido}</td>
-                              <td style={{ padding: "11px 16px", fontSize: 12, color: T.textSub }}>{p.condicion}</td>
-                              <td style={{ padding: "11px 16px", fontSize: 12, color: T.textSub }}>{p.nivel}</td>
-                              <td style={{ padding: "11px 16px", textAlign: "center", fontWeight: 700, color: T.primary }}>{followups.filter(f => f.beneficiarioId === p.id).length}</td>
-                              <td style={{ padding: "11px 16px", fontWeight: 700, color: T.green }}>{fmt(donations.filter(d => d.beneficiarioId === p.id).reduce((s, d) => s + d.monto, 0))}</td>
-                              <td style={{ padding: "11px 16px", textAlign: "center" }}>{projects.filter(pr => pr.beneficiarios && pr.beneficiarios.includes(p.id)).length}</td>
-                              <td style={{ padding: "11px 16px" }}>{estadoBadge(p.estado)}</td>
+                              <td style={{ padding: isMobile ? "8px 12px" : "11px 16px", fontWeight: 600, fontSize: isMobile ? 12 : 13 }}>{p.nombre} {p.apellido}</td>
+                              <td style={{ padding: isMobile ? "8px 12px" : "11px 16px", fontSize: isMobile ? 11 : 12, color: T.textSub }}>{p.condicion}</td>
+                              <td style={{ padding: isMobile ? "8px 12px" : "11px 16px", fontSize: isMobile ? 11 : 12, color: T.textSub }}>{p.nivel}</td>
+                              <td style={{ padding: isMobile ? "8px 12px" : "11px 16px", textAlign: "center", fontWeight: 700, color: T.primary }}>{followups.filter(f => f.beneficiarioId === p.id).length}</td>
+                              <td style={{ padding: isMobile ? "8px 12px" : "11px 16px", fontWeight: 700, color: T.green }}>{fmt(donations.filter(d => d.beneficiarioId === p.id).reduce((s, d) => s + d.monto, 0))}</td>
+                              <td style={{ padding: isMobile ? "8px 12px" : "11px 16px", textAlign: "center" }}>{projects.filter(pr => pr.beneficiarios && pr.beneficiarios.includes(p.id)).length}</td>
+                              <td style={{ padding: isMobile ? "8px 12px" : "11px 16px" }}>{estadoBadge(p.estado)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -2477,6 +2538,7 @@ export default function App() {
         </Modal>
       )}
       {importModal && <ImportModal onClose={() => setImportModal(false)} onImport={handleImport} />}
+
       {/* ─── CONTENEDOR OCULTO PARA PDF ───────────────────────────── */}
       <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', zIndex: -999, width: '800px' }}>
         {renderPDFContent()}
