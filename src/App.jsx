@@ -127,7 +127,7 @@ const PERMS = {
   trabajador_social: {
     dashboard:true, patients_view:true, patients_add:true, patients_edit:true, patients_del:false,
     followups_view:true, followups_add:false, followups_edit:false,
-    donations_view:true, donations_add:true,
+    donations_view:true, donations_add:true, donations_edit: true, donations_del: false,
     projects_view:false, projects_add:false,
     stats:false, export:false, import:false, users:false,
   },
@@ -148,21 +148,21 @@ const PERMS = {
   coordinador: {
     dashboard:true, patients_view:true, patients_add:true, patients_edit:true, patients_del:false,
     followups_view:true, followups_add:true, followups_edit:true,
-    donations_view:true, donations_add:true,
+    donations_view:true, donations_add:true, donations_edit: true, donations_del: true,
     projects_view:true, projects_add:true,
     stats:true, export:true, import:false, users:false,
   },
   director: {
     dashboard:true, patients_view:true, patients_add:true, patients_edit:true, patients_del:true,
     followups_view:true, followups_add:true, followups_edit:true,
-    donations_view:true, donations_add:true,
+    donations_view:true, donations_add:true, donations_edit: true, donations_del: true,
     projects_view:true, projects_add:true,
     stats:true, export:true, import:true, users:true,
   },
   soporte: {
     dashboard:true, patients_view:true, patients_add:true, patients_edit:true, patients_del:true,
     followups_view:true, followups_add:true, followups_edit:true,
-    donations_view:true, donations_add:true,
+    donations_view:true, donations_add:true, donations_edit: true, donations_del: true,
     projects_view:true, projects_add:true,
     stats:true, export:true, import:true, users:true,
   },
@@ -334,23 +334,43 @@ const PatientForm=({init,onSave,onClose})=>{
   );
 };
 
-const EDON={donante:"",relacion:"Familiar",beneficiarioId:"",monto:"",fecha:new Date().toISOString().slice(0,10),tipo:"Transferencia",proyectoId:"",notas:""};
-const DonationForm=({onSave,onClose,beneficiaries,projects})=>{
-  const[f,sf]=useState(EDON);
-  const s=k=>e=>sf(p=>({...p,[k]:e.target.value}));
-  return(
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-      <Field label="Nombre del Donante"><input value={f.donante} onChange={s("donante")}/></Field>
-      <Field label="Tipo de Relación" span={1}><select value={f.relacion} onChange={s("relacion")}>{["Familiar","Externo","Corporativo","Anónimo"].map(o=><option key={o}>{o}</option>)}</select></Field>
-      <Field label="Beneficiario Relacionado" span={1}><select value={f.beneficiarioId} onChange={s("beneficiarioId")}><option value="">Sin beneficiario específico</option>{beneficiaries.map(p=><option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>)}</select></Field>
-      <Field label="Monto ($)" span={1}><input type="number" value={f.monto} onChange={s("monto")}/></Field>
-      <Field label="Fecha" span={1}><input type="date" value={f.fecha} onChange={s("fecha")}/></Field>
-      <Field label="Tipo de Pago" span={1}><select value={f.tipo} onChange={s("tipo")}>{["Transferencia","Efectivo","Cheque","Tarjeta","Especie"].map(o=><option key={o}>{o}</option>)}</select></Field>
-      <Field label="Proyecto Destino"><select value={f.proyectoId} onChange={s("proyectoId")}><option value="">Sin proyecto específico</option>{projects.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></Field>
-      <Field label="Notas" span={1}><textarea value={f.notas} onChange={s("notas")} style={{minHeight:60}}/></Field>
-      <div style={{gridColumn:"span 2",display:"flex",gap:10,justifyContent:"flex-end"}}>
+const EDON = { donante: "", relacion: "Familiar", beneficiarioId: "", monto: "", fecha: new Date().toISOString().slice(0, 10), tipo: "Transferencia", proyectoId: "", notas: "" };
+const DonationForm = ({ init, onSave, onClose, beneficiaries, projects }) => {
+  const [f, sf] = useState(init || EDON);
+  const s = k => e => sf(p => ({ ...p, [k]: e.target.value }));
+
+  // Si cambia init (por ejemplo, al editar), actualizar el estado
+  useEffect(() => {
+    if (init) {
+      sf(init);
+    } else {
+      sf(EDON);
+    }
+  }, [init]);
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <Field label="Nombre del Donante"><input value={f.donante} onChange={s("donante")} /></Field>
+      <Field label="Tipo de Relación" span={1}><select value={f.relacion} onChange={s("relacion")}>{["Familiar", "Externo", "Corporativo", "Anónimo"].map(o => <option key={o}>{o}</option>)}</select></Field>
+      <Field label="Beneficiario Relacionado" span={1}><select value={f.beneficiarioId} onChange={s("beneficiarioId")}><option value="">Sin beneficiario específico</option>{beneficiaries.map(p => <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>)}</select></Field>
+      <Field label="Monto ($)" span={1}><input type="number" value={f.monto} onChange={s("monto")} /></Field>
+      <Field label="Fecha" span={1}><input type="date" value={f.fecha} onChange={s("fecha")} /></Field>
+      <Field label="Tipo de Pago" span={1}><select value={f.tipo} onChange={s("tipo")}>{["Transferencia", "Efectivo", "Cheque", "Tarjeta", "Especie"].map(o => <option key={o}>{o}</option>)}</select></Field>
+      <Field label="Proyecto Destino"><select value={f.proyectoId} onChange={s("proyectoId")}><option value="">Sin proyecto específico</option>{projects.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}</select></Field>
+      <Field label="Notas" span={1}><textarea value={f.notas} onChange={s("notas")} style={{ minHeight: 60 }} /></Field>
+      <div style={{ gridColumn: "span 2", display: "flex", gap: 10, justifyContent: "flex-end" }}>
         <Btn variant="ghost" onClick={onClose}>Cancelar</Btn>
-        <Btn variant="accent" onClick={()=>onSave({...f,monto:parseFloat(f.monto)||0,beneficiarioId:f.beneficiarioId?parseInt(f.beneficiarioId):null,proyectoId:f.proyectoId?parseInt(f.proyectoId):null})}>Registrar Donación</Btn>
+        <Btn variant="accent" onClick={() => {
+          const donationData = {
+            ...f,
+            monto: parseFloat(f.monto) || 0,
+            beneficiarioId: f.beneficiarioId ? parseInt(f.beneficiarioId) : null,
+            proyectoId: f.proyectoId ? parseInt(f.proyectoId) : null,
+          };
+          onSave(donationData);
+        }}>
+          {init?.id ? "Actualizar Donación" : "Registrar Donación"}
+        </Btn>
       </div>
     </div>
   );
@@ -427,47 +447,46 @@ const ImportModal=({onClose,onImport})=>{
     return sheets;
   };
 
-  const normalise=sheets=>{
-    const res={beneficiaries:[],donations:[]};
-    const ps=sheets["Beneficiarios"]||sheets["Beneficiarios"]||[];
-    ps.forEach(r=>{
-      if(!r["Nombre"]&&!r["nombre"])return;
-      res.beneficiaries.push({
-        id:uid(),
-        nombre:r["Nombre"]||"",
-        apellido:r["Apellido"]||"",
-        fecha_nac:r["Fecha Nac."]||"",
-        diagnostico:r["Diagnóstico"]||"",
-        condicion:r["Condicion"]||"Otra",
-        nivel:r["Nivel"]||"Leve",
-        telefono:r["Teléfono"]||"",
-        email:r["Email"]||"",
-        direccion:r["Dirección"]||"",
-        tutor:r["Tutor"]||"",
-        relacionTutor:r["Relación"]||"",
-        telefonoTutor:"",
-        fecha_ingreso:r["Ingreso"]||new Date().toISOString().slice(0,10),
-        estado:r["Estado"]||"Activo",
-        notas:r["Notas"]||""
-      });
+  const normalise = sheets => {
+  const res = { beneficiaries: [], donations: [] };
+  const ps = sheets["Beneficiarios"] || sheets["beneficiarios"] || [];
+  ps.forEach(r => {
+    if (!r["Nombre"] && !r["nombre"]) return;
+    res.beneficiaries.push({
+      nombre: r["Nombre"] || "",
+      apellido: r["Apellido"] || "",
+      fecha_nac: r["Fecha Nac."] || "",
+      diagnostico: r["Diagnóstico"] || "",
+      condicion: r["Condicion"] || "Otra",
+      nivel: r["Nivel"] || "Leve",
+      telefono: r["Teléfono"] || "",
+      email: r["Email"] || "",
+      direccion: r["Dirección"] || "",
+      tutor: r["Tutor"] || "",
+      relacionTutor: r["Relación"] || "",
+      telefonoTutor: "",
+      fecha_ingreso: r["Ingreso"] || new Date().toISOString().slice(0, 10),
+      estado: r["Estado"] || "Activo",
+      notas: r["Notas"] || ""
     });
-    const ds=sheets["Donaciones"]||sheets["donaciones"]||[];
-    ds.forEach(r=>{
-      if(!r["Donante"]&&!r["donante"])return;
-      res.donations.push({
-        id:uid(),
-        donante:r["Donante"]||"",
-        relacion:r["Relación"]||"Externo",
-        beneficiarioId:null,
-        monto:parseFloat(r["Monto ($)"]||0),
-        fecha:r["Fecha"]||"",
-        tipo:r["Tipo Pago"]||"Transferencia",
-        proyectoId:null,
-        notas:r["Notas"]||""
-      });
+  });
+  const ds = sheets["Donaciones"] || sheets["donaciones"] || [];
+  ds.forEach(r => {
+    if (!r["Donante"] && !r["donante"]) return;
+    res.donations.push({
+      donante: r["Donante"] || "",
+      relacion: r["Relación"] || "Externo",
+      beneficiarioId: null, // ⚠️ Si tienes una columna "Beneficiario", deberías mapearla
+      monto: parseFloat(r["Monto ($)"] || 0),
+      fecha: r["Fecha"] || "",
+      tipo: r["Tipo Pago"] || "Transferencia",
+      proyectoId: null,
+      notas: r["Notas"] || ""
     });
-    return res;
-  };
+  });
+  return res;
+};
+
 
   const handleFile=async file=>{
     if(!file)return;
@@ -478,6 +497,7 @@ const ImportModal=({onClose,onImport})=>{
     setPreview({sheets,counts});
   };
 
+  /*
   const searchDrive=async()=>{
     setDriveLoading(true);setDriveMsg("");setDriveFiles([]);
     try{
@@ -505,7 +525,7 @@ const ImportModal=({onClose,onImport})=>{
       }
     }catch(e){setDriveMsg("Error al conectar con Drive: "+e.message);}
     setDriveLoading(false);
-  };
+  };*/
 
   const confirmImport=()=>{
     if(!preview)return;
@@ -526,9 +546,9 @@ const ImportModal=({onClose,onImport})=>{
   );
 
   return(
-    <Modal title="Importar Datos" subtitle="Desde archivo Excel o Google Drive" onClose={onClose} wide>
+    <Modal title="Importar Datos" subtitle="Desde archivo Excel" onClose={onClose} wide>
       <div style={{display:"flex",gap:4,background:T.bgSoft,borderRadius:11,padding:4,marginBottom:24}}>
-        {[["excel","📄 Archivo Excel"],["drive","🟢 Google Drive"]].map(([id,label])=>(
+        {[["excel","📄 Archivo Excel"]].map(([id,label])=>(
           <button key={id} onClick={()=>setTab(id)} style={{flex:1,padding:"9px 16px",border:"none",borderRadius:8,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,fontSize:13,transition:"all 0.18s",background:tab===id?T.bgCard:"transparent",color:tab===id?T.primary:T.textMuted,boxShadow:tab===id?"0 2px 8px rgba(0,0,0,0.08)":"none"}}>{label}</button>
         ))}
       </div>
@@ -574,7 +594,6 @@ const ImportModal=({onClose,onImport})=>{
               <span style={{fontSize:20}}>🔗</span>
               <div>
                 <div style={{fontWeight:700,fontSize:13,color:T.primary}}>Google Drive Conectado</div>
-                <div style={{fontSize:11,color:T.textSub}}>Tu cuenta está vinculada a esta sesión de Claude</div>
               </div>
               <Badge text="Activo" color={T.green}/>
             </div>
@@ -780,12 +799,23 @@ const UsersPanel = ({ users, onSaveUser, onToggleActive, onDeleteUser, currentUs
 };
 
 /* ─── LOGIN SCREEN ──────────────────────────────────────────────────────── */
+/* ─── LOGIN SCREEN (RESPONSIVE) ──────────────────────────────────────── */
 const LoginScreen = ({ onLogin }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // Detectar tamaño de pantalla
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = windowWidth < 768;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -811,122 +841,337 @@ const LoginScreen = ({ onLogin }) => {
 
   return (
     <div style={{
-      minHeight:"100vh",
-      background:`linear-gradient(135deg, #1A3A3A 0%, #2C5A5A 50%, #1A3A3A 100%)`,
-      display:"flex", alignItems:"center", justifyContent:"center", padding:20,
-      fontFamily:"'Plus Jakarta Sans',sans-serif"
+      minHeight: "100vh",
+      background: `linear-gradient(135deg, #1A3A3A 0%, #2C5A5A 50%, #1A3A3A 100%)`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: isMobile ? 16 : 20,
+      fontFamily: "'Plus Jakarta Sans', sans-serif"
     }}>
       <div style={{
-        position:"fixed", inset:0,
-        backgroundImage:"radial-gradient(circle at 20% 50%, rgba(74,156,157,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(232,168,124,0.06) 0%, transparent 40%)",
-        pointerEvents:"none"
-      }}/>
+        position: "fixed",
+        inset: 0,
+        backgroundImage: "radial-gradient(circle at 20% 50%, rgba(74,156,157,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(232,168,124,0.06) 0%, transparent 40%)",
+        pointerEvents: "none"
+      }} />
       <div style={{
-        width:"100%", maxWidth:940,
-        display:"grid", gridTemplateColumns:"1fr 1fr", gap:0,
-        borderRadius:22, overflow:"hidden",
-        boxShadow:"0 40px 100px rgba(0,0,0,0.4)",
-        animation:"fadeUp 0.4s ease"
+        width: "100%",
+        maxWidth: isMobile ? "100%" : 940,
+        display: "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+        gap: 0,
+        borderRadius: isMobile ? 16 : 22,
+        overflow: "hidden",
+        boxShadow: "0 40px 100px rgba(0,0,0,0.4)",
+        animation: "fadeUp 0.4s ease"
       }}>
+        {/* Panel izquierdo (información) */}
         <div style={{
-          background:`linear-gradient(160deg, #1E3D3D, #2C5A5A)`,
-          padding:"52px 44px",
-          display:"flex", flexDirection:"column", justifyContent:"space-between"
+          background: `linear-gradient(160deg, #1E3D3D, #2C5A5A)`,
+          padding: isMobile ? "28px 24px" : "52px 44px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          order: isMobile ? 0 : 0,
+          textAlign: isMobile ? "center" : "left"
         }}>
           <div>
-            <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:48 }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              marginBottom: isMobile ? 24 : 48,
+              justifyContent: isMobile ? "center" : "flex-start"
+            }}>
               <div style={{
-                width:46, height:46,
-                background:`linear-gradient(135deg, ${T.primaryLt}, ${T.accent})`,
-                borderRadius:13,
-                display:"flex", alignItems:"center", justifyContent:"center",
-                fontSize:22
-              }}>🌿</div>
+                width: isMobile ? 40 : 46,
+                height: isMobile ? 40 : 46,
+                background: `linear-gradient(135deg, ${T.primaryLt}, ${T.accent})`,
+                borderRadius: 13,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: isMobile ? 18 : 22,
+                flexShrink: 0
+              }}>
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAolBMVEVHcEz5vzX4wD/7uBm6xL/6uyr6uyjraizsZybqdT/4wULkkmbqbzV7o6v5vC3qeEPrbC42qkoopz46q035uyn4xErpfUvrbTJCr1M5qkz6uyczqkg9rFHrbC/nkmf8vCbtczhis3A7XagxqUUrVo0PRIUKQoQTR4YzZJiq/0QcTIgYSYYcTIgkUosXSIYVSIYzXI8gT4kZSocfToggT4keTYiDCio9AAAANnRSTlMAZUj/Bby29P9pPhSyDZBQ5tj/lLAzNc5No7bIfuESyXoXF+xO////Jgqb3Lpr6/A6jM6Cea4AWZ+xAAAA8UlEQVR4Ab3NRWIDMQwF0J/KbZiZ0TCMvf/RAlYYlu3b2GL8uUIBH30RCXzyTYQLIfCI6OdaK5bKD7UKUQGsWiyVarDq/DSIKrCapVKpxXvbna59e0T90zsYlq5zGHU649M74WK5dDTAxbTTmfHaPtfmC1yJjq32acnnVri37nTs3Q3wsJKJaWeLnVTarIYPNa6OHFd5vtZgZhccg0u4CaMYgA4gAj+Uirm2tpOJfVN/ZwtSyzBNYpwEcgcrCmOp/cDUcRXLGFZdpajjkZeAZSrAEyHBNtLDs7rM7Wt0JPDCV2EW5Kn8xTtx7rrZboP/cgCDbBaSRtadhgAAAABJRU5ErkJggg==" style={{ width: '100%', height: '100%' }} />
+              </div>
               <div>
-                <div style={{ fontFamily:"'Fraunces',serif", color:"#fff", fontSize:18, fontWeight:700 }}>Fundación Crescendo</div>
-                <div style={{ color:"#80CBC4", fontSize:11, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase" }}>Sistema de Gestión Integral</div>
+                <div style={{
+                  fontFamily: "'Fraunces', serif",
+                  color: "#fff",
+                  fontSize: isMobile ? 16 : 18,
+                  fontWeight: 700
+                }}>
+                  Fundación Crescendo
+                </div>
+                <div style={{
+                  color: "#80CBC4",
+                  fontSize: isMobile ? 9 : 11,
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase"
+                }}>
+                  Sistema de Gestión Integral
+                </div>
               </div>
             </div>
-            <div style={{ fontFamily:"'Fraunces',serif", fontSize:30, fontWeight:700, color:"#fff", lineHeight:1.3, marginBottom:16 }}>
-              Bienvenido/a de vuelta
+            <div style={{
+              fontFamily: "'Fraunces', serif",
+              fontSize: isMobile ? 24 : 30,
+              fontWeight: 700,
+              color: "#fff",
+              lineHeight: 1.3,
+              marginBottom: isMobile ? 12 : 16
+            }}>
+              {isMobile ? "¡Bienvenido!" : "Bienvenido/a de vuelta"}
             </div>
-            <div style={{ fontSize:14, color:"rgba(255,255,255,0.6)", lineHeight:1.7 }}>
-              Plataforma centralizada para el seguimiento integral de beneficiarios, gestión de proyectos y donaciones.
-            </div>
+            {!isMobile && (
+              <div style={{
+                fontSize: 14,
+                color: "rgba(255,255,255,0.6)",
+                lineHeight: 1.7
+              }}>
+                Plataforma centralizada para el seguimiento integral de beneficiarios, gestión de proyectos y donaciones.
+              </div>
+            )}
           </div>
-          <div>
-            <div style={{ fontSize:11, color:"rgba(255,255,255,0.4)", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>
+          <div style={{ marginTop: isMobile ? 16 : 0 }}>
+            <div style={{
+              fontSize: isMobile ? 10 : 11,
+              color: "rgba(255,255,255,0.4)",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              marginBottom: isMobile ? 10 : 14,
+              textAlign: isMobile ? "center" : "left"
+            }}>
               Acceso rápido (demo)
             </div>
-            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: isMobile ? 6 : 8
+            }}>
               {Object.entries(ROLES).map(([key, r]) => {
                 const u = { username: key, password: "1234", name: r.label, role: key, email: `${key}@crescendo.cl`, active: true };
                 return (
-                  <button key={key} onClick={() => quickLogin(u)} style={{
-                    background:"rgba(255,255,255,0.05)",
-                    border:"1px solid rgba(255,255,255,0.08)",
-                    borderRadius:10,
-                    padding:"9px 14px",
-                    display:"flex", alignItems:"center", gap:10,
-                    cursor:"pointer", transition:"all 0.15s", textAlign:"left"
-                  }}
-                    onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,0.1)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.2)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background="rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.08)"; }}
+                  <button
+                    key={key}
+                    onClick={() => quickLogin(u)}
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: 10,
+                      padding: isMobile ? "6px 12px" : "9px 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: isMobile ? 6 : 10,
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                      textAlign: "left",
+                      width: "100%"
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                    }}
                   >
-                    <span style={{ fontSize:16 }}>{r.icon}</span>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:12, fontWeight:600, color:"#fff" }}>{r.label}</div>
-                      <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)" }}>{key} / 1234</div>
+                    <span style={{ fontSize: isMobile ? 14 : 16 }}>{r.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontSize: isMobile ? 11 : 12,
+                        fontWeight: 600,
+                        color: "#fff"
+                      }}>
+                        {r.label}
+                      </div>
+                      <div style={{
+                        fontSize: isMobile ? 9 : 10,
+                        color: "rgba(255,255,255,0.4)"
+                      }}>
+                        {key} / 1234
+                      </div>
                     </div>
-                    <div style={{ width:8, height:8, borderRadius:"50%", background:r.color }} />
+                    <div style={{
+                      width: isMobile ? 6 : 8,
+                      height: isMobile ? 6 : 8,
+                      borderRadius: "50%",
+                      background: r.color
+                    }} />
                   </button>
                 );
               })}
             </div>
           </div>
         </div>
-        <div style={{ background:T.bgCard, padding:"52px 44px", display:"flex", flexDirection:"column", justifyContent:"center" }}>
-          <div style={{ fontFamily:"'Fraunces',serif", fontSize:24, fontWeight:700, color:T.text, marginBottom:6 }}>Iniciar Sesión</div>
-          <div style={{ fontSize:13, color:T.textMuted, marginBottom:36 }}>Ingresa tus credenciales para continuar</div>
+
+        {/* Panel derecho (formulario) */}
+        <div style={{
+          background: T.bgCard,
+          padding: isMobile ? "28px 20px" : "52px 44px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center"
+        }}>
+          <div style={{
+            fontFamily: "'Fraunces', serif",
+            fontSize: isMobile ? 20 : 24,
+            fontWeight: 700,
+            color: T.text,
+            marginBottom: isMobile ? 4 : 6,
+            textAlign: isMobile ? "center" : "left"
+          }}>
+            Iniciar Sesión
+          </div>
+          <div style={{
+            fontSize: isMobile ? 12 : 13,
+            color: T.textMuted,
+            marginBottom: isMobile ? 24 : 36,
+            textAlign: isMobile ? "center" : "left"
+          }}>
+            Ingresa tus credenciales para continuar
+          </div>
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom:18 }}>
+            <div style={{ marginBottom: isMobile ? 14 : 18 }}>
               <label>Usuario</label>
-              <div style={{ position:"relative" }}>
-                <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", fontSize:16 }}>👤</span>
-                <input value={username} onChange={e=>setUsername(e.target.value)} placeholder="tu_usuario" style={{ paddingLeft:38 }} />
+              <div style={{ position: "relative" }}>
+                <span style={{
+                  position: "absolute",
+                  left: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontSize: 16
+                }}>👤</span>
+                <input
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  placeholder="tu_usuario"
+                  style={{ paddingLeft: 38 }}
+                />
               </div>
             </div>
-            <div style={{ marginBottom:24 }}>
+            <div style={{ marginBottom: isMobile ? 18 : 24 }}>
               <label>Contraseña</label>
-              <div style={{ position:"relative" }}>
-                <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", fontSize:16 }}>🔒</span>
-                <input type={showPass?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" style={{ paddingLeft:38, paddingRight:40 }} />
-                <button onClick={()=>setShowPass(s=>!s)} style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", fontSize:15, color:T.textMuted }}>
-                  {showPass?"🙈":"👁"}
+              <div style={{ position: "relative" }}>
+                <span style={{
+                  position: "absolute",
+                  left: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontSize: 16
+                }}>🔒</span>
+                <input
+                  type={showPass ? "text" : "password"}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  style={{ paddingLeft: 38, paddingRight: 40 }}
+                />
+                <button
+                  onClick={() => setShowPass(s => !s)}
+                  style={{
+                    position: "absolute",
+                    right: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 15,
+                    color: T.textMuted
+                  }}
+                >
+                  {showPass ? "🙈" : "👁"}
                 </button>
               </div>
             </div>
             {error && (
-              <div style={{ background:T.red+"12", border:`1px solid ${T.red}33`, borderRadius:10, padding:"11px 14px", marginBottom:18, fontSize:13, color:T.red, display:"flex", alignItems:"center", gap:8 }}>
+              <div style={{
+                background: T.red + "12",
+                border: `1px solid ${T.red}33`,
+                borderRadius: 10,
+                padding: "11px 14px",
+                marginBottom: isMobile ? 14 : 18,
+                fontSize: isMobile ? 12 : 13,
+                color: T.red,
+                display: "flex",
+                alignItems: "center",
+                gap: 8
+              }}>
                 ⚠️ {error}
               </div>
             )}
-            <button type="submit" disabled={loading || !username || !password} style={{
-              width:"100%", padding:"13px",
-              background:loading||!username||!password?"#aaa":`linear-gradient(135deg, ${T.primary}, ${T.primaryLt})`,
-              border:"none", borderRadius:11, color:"#fff",
-              fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:14, fontWeight:700,
-              cursor:loading||!username||!password?"not-allowed":"pointer",
-              boxShadow:`0 4px 16px ${T.primary}44`,
-              transition:"all 0.2s",
-              display:"flex", alignItems:"center", justifyContent:"center", gap:8
-            }}>
-              {loading ? <><span style={{ display:"inline-block", width:16, height:16, border:"2.5px solid rgba(255,255,255,0.3)", borderTopColor:"#fff", borderRadius:"50%", animation:"spin 0.7s linear infinite" }} /> Verificando...</> : "Ingresar al Sistema →"}
+            <button
+              type="submit"
+              disabled={loading || !username || !password}
+              style={{
+                width: "100%",
+                padding: isMobile ? "12px" : "13px",
+                background: loading || !username || !password
+                  ? "#aaa"
+                  : `linear-gradient(135deg, ${T.primary}, ${T.primaryLt})`,
+                border: "none",
+                borderRadius: 11,
+                color: "#fff",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: isMobile ? 13 : 14,
+                fontWeight: 700,
+                cursor: loading || !username || !password ? "not-allowed" : "pointer",
+                boxShadow: `0 4px 16px ${T.primary}44`,
+                transition: "all 0.2s",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8
+              }}
+            >
+              {loading ? (
+                <>
+                  <span style={{
+                    display: "inline-block",
+                    width: 16,
+                    height: 16,
+                    border: "2.5px solid rgba(255,255,255,0.3)",
+                    borderTopColor: "#fff",
+                    borderRadius: "50%",
+                    animation: "spin 0.7s linear infinite"
+                  }} />
+                  Verificando...
+                </>
+              ) : (
+                "Ingresar al Sistema →"
+              )}
             </button>
           </form>
-          <div style={{ marginTop:32, padding:"16px", background:T.bgSoft, borderRadius:12 }}>
-            <div style={{ fontSize:11, color:T.textMuted, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:8 }}>Contraseña demo</div>
-            <div style={{ fontSize:13, color:T.textSub }}>Todos los usuarios utilizan la contraseña <strong>1234</strong>. Selecciona un usuario del panel izquierdo para acceso rápido.</div>
+          <div style={{
+            marginTop: isMobile ? 20 : 32,
+            padding: isMobile ? "12px" : "16px",
+            background: T.bgSoft,
+            borderRadius: 12,
+            textAlign: isMobile ? "center" : "left"
+          }}>
+            <div style={{
+              fontSize: isMobile ? 10 : 11,
+              color: T.textMuted,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom: isMobile ? 4 : 8
+            }}>
+              Contraseña demo
+            </div>
+            <div style={{
+              fontSize: isMobile ? 12 : 13,
+              color: T.textSub
+            }}>
+              Todos los usuarios utilizan la contraseña <strong>1234</strong>. Selecciona un usuario del panel izquierdo para acceso rápido.
+            </div>
           </div>
         </div>
       </div>
@@ -958,6 +1203,7 @@ export default function App() {
   const [followups, setFollowups] = useState([]);
   const [patModal, setPatModal] = useState(null);
   const [donModal, setDonModal] = useState(false);
+  const [editDonation, setEditDonation] = useState(null);
   const [projModal, setProjModal] = useState(null);
   const [fuModal, setFuModal] = useState(null);
   const [detailPat, setDetailPat] = useState(null);
@@ -1169,20 +1415,55 @@ export default function App() {
 
   // DONACIONES
   const saveDon = async (donation) => {
-    try {
+  try {
+    let result;
+    if (donation.id) {
+      // Editar
+      const { data, error } = await supabase
+        .from('donations')
+        .update(donation)
+        .eq('id', donation.id)
+        .select()
+        .single();
+      if (error) throw error;
+      result = data;
+      setDonations(prev => prev.map(d => d.id === result.id ? result : d));
+      alert('Donación actualizada correctamente');
+    } else {
+      // Crear
       const { data, error } = await supabase
         .from('donations')
         .insert([donation])
         .select()
         .single();
       if (error) throw error;
-      setDonations(prev => [data, ...prev]);
-      setDonModal(false);
-      return data;
-    } catch (error) {
-      alert('Error al registrar donación: ' + error.message);
+      result = data;
+      setDonations(prev => [result, ...prev]);
+      alert('Donación registrada correctamente');
     }
-  };
+    setDonModal(false);
+    setEditDonation(null);
+    return result;
+  } catch (error) {
+    alert('Error al guardar donación: ' + error.message);
+  }
+};
+
+
+
+const delDon = async (id) => {
+  if (!window.confirm('¿Eliminar esta donación?')) return;
+  try {
+    const { error } = await supabase
+      .from('donations')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+    setDonations(prev => prev.filter(d => d.id !== id));
+  } catch (error) {
+    alert('Error al eliminar donación: ' + error.message);
+  }
+};
 
   // SEGUIMIENTOS
   const saveFu = async (followup) => {
@@ -1421,7 +1702,7 @@ export default function App() {
             justifyContent: 'center',
             fontSize: '24px',
             color: '#fff'
-          }}>🌿</div>
+          }}><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAolBMVEVHcEz5vzX4wD/7uBm6xL/6uyr6uyjraizsZybqdT/4wULkkmbqbzV7o6v5vC3qeEPrbC42qkoopz46q035uyn4xErpfUvrbTJCr1M5qkz6uyczqkg9rFHrbC/nkmf8vCbtczhis3A7XagxqUUrVo0PRIUKQoQTR4YzZJiq/0QcTIgYSYYcTIgkUosXSIYVSIYzXI8gT4kZSocfToggT4keTYiDCio9AAAANnRSTlMAZUj/Bby29P9pPhSyDZBQ5tj/lLAzNc5No7bIfuESyXoXF+xO////Jgqb3Lpr6/A6jM6Cea4AWZ+xAAAA8UlEQVR4Ab3NRWIDMQwF0J/KbZiZ0TCMvf/RAlYYlu3b2GL8uUIBH30RCXzyTYQLIfCI6OdaK5bKD7UKUQGsWiyVarDq/DSIKrCapVKpxXvbna59e0T90zsYlq5zGHU649M74WK5dDTAxbTTmfHaPtfmC1yJjq32acnnVri37nTs3Q3wsJKJaWeLnVTarIYPNa6OHFd5vtZgZhccg0u4CaMYgA4gAj+Uirm2tpOJfVN/ZwtSyzBNYpwEcgcrCmOp/cDUcRXLGFZdpajjkZeAZSrAEyHBNtLDs7rM7Wt0JPDCV2EW5Kn8xTtx7rrZboP/cgCDbBaSRtadhgAAAABJRU5ErkJggg=="></img></div>
           <div>
             <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: "'Fraunces', serif", color: '#2C7A7B' }}>
               Fundación Crescendo
@@ -1720,7 +2001,7 @@ export default function App() {
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 18, flexShrink: 0,
               boxShadow: `0 4px 12px ${T.accent}44`
-            }}>🌿</div>
+            }}><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAolBMVEVHcEz5vzX4wD/7uBm6xL/6uyr6uyjraizsZybqdT/4wULkkmbqbzV7o6v5vC3qeEPrbC42qkoopz46q035uyn4xErpfUvrbTJCr1M5qkz6uyczqkg9rFHrbC/nkmf8vCbtczhis3A7XagxqUUrVo0PRIUKQoQTR4YzZJiq/0QcTIgYSYYcTIgkUosXSIYVSIYzXI8gT4kZSocfToggT4keTYiDCio9AAAANnRSTlMAZUj/Bby29P9pPhSyDZBQ5tj/lLAzNc5No7bIfuESyXoXF+xO////Jgqb3Lpr6/A6jM6Cea4AWZ+xAAAA8UlEQVR4Ab3NRWIDMQwF0J/KbZiZ0TCMvf/RAlYYlu3b2GL8uUIBH30RCXzyTYQLIfCI6OdaK5bKD7UKUQGsWiyVarDq/DSIKrCapVKpxXvbna59e0T90zsYlq5zGHU649M74WK5dDTAxbTTmfHaPtfmC1yJjq32acnnVri37nTs3Q3wsJKJaWeLnVTarIYPNa6OHFd5vtZgZhccg0u4CaMYgA4gAj+Uirm2tpOJfVN/ZwtSyzBNYpwEcgcrCmOp/cDUcRXLGFZdpajjkZeAZSrAEyHBNtLDs7rM7Wt0JPDCV2EW5Kn8xTtx7rrZboP/cgCDbBaSRtadhgAAAABJRU5ErkJggg=="></img></div>
             {(sideOpen || isMobile) && (
               <div>
                 <div style={{ fontFamily: "'Fraunces',serif", color: "#fff", fontSize: isMobile ? 14 : 15, fontWeight: 700, lineHeight: 1.2 }}>Fundación Crescendo</div>
@@ -1916,7 +2197,11 @@ export default function App() {
             <div style={{ display: "flex", gap: isMobile ? 4 : 10, alignItems: "center", flexWrap: "wrap" }}>
               {can(currentUser, "import") && <Btn variant="soft" onClick={() => setImportModal(true)} sm icon="📤">{!isMobile && "Importar"}</Btn>}
               {view === "beneficiaries" && !detailPat && can(currentUser, "patients_add") && <Btn onClick={() => setPatModal("new")} icon="＋">{!isMobile && "Nuevo Beneficiario"}</Btn>}
-              {view === "donations" && can(currentUser, "donations_add") && <Btn variant="accent" onClick={() => setDonModal(true)} icon="＋">{!isMobile && "Registrar Donación"}</Btn>}
+              {view === "donations" && can(currentUser, "donations_add") && (
+                <Btn variant="accent" onClick={() => { setEditDonation(null); setDonModal(true); }} icon="＋">
+                  {!isMobile && "Registrar Donación"}
+                </Btn>
+              )}
               {view === "projects" && can(currentUser, "projects_add") && <Btn onClick={() => setProjModal("new")} icon="＋">{!isMobile && "Nuevo Proyecto"}</Btn>}
               {view === "followups" && can(currentUser, "followups_add") && <Btn onClick={() => setFuModal("new")} icon="＋">{!isMobile && "Nuevo Seguimiento"}</Btn>}
               {can(currentUser, "export") && <Btn variant="gold" onClick={exportExcel} sm icon="📥">{!isMobile && "Excel"}</Btn>}
@@ -2226,9 +2511,20 @@ export default function App() {
                             <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 13 : 14, marginBottom: isMobile ? 10 : 14 }}>Donaciones ({patDon.length})</div>
                             {patDon.length === 0 ? <div style={{ color: T.textMuted, fontSize: isMobile ? 11 : 12, textAlign: "center", padding: isMobile ? 8 : 12 }}>Sin donaciones</div> :
                               patDon.map(d => (
-                                <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.border}`, fontSize: isMobile ? 11 : 12 }}>
-                                  <div><div style={{ fontWeight: 600 }}>{d.donante}</div><div style={{ fontSize: isMobile ? 10 : 11, color: T.textMuted }}>{fmtD(d.fecha)}</div></div>
-                                  <div style={{ fontWeight: 700, color: T.green }}>{fmt(d.monto)}</div>
+                                <div key={d.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: `1px solid ${T.border}`, fontSize: isMobile ? 11 : 12 }}>
+                                  <div>
+                                    <div style={{ fontWeight: 600 }}>{d.donante}</div>
+                                    <div style={{ fontSize: isMobile ? 10 : 11, color: T.textMuted }}>{fmtD(d.fecha)}</div>
+                                  </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <div style={{ fontWeight: 700, color: T.green }}>{fmt(d.monto)}</div>
+                                    {can(currentUser, "donations_edit") && (
+                                      <button onClick={() => { setEditDonation(d); setDonModal(true); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.primary, fontSize: 14 }}>✏️</button>
+                                    )}
+                                    {can(currentUser, "donations_del") && (
+                                      <button onClick={() => delDon(d.id)} style={{ background: "none", border: "none", cursor: "pointer", color: T.red, fontSize: 14 }}>🗑</button>
+                                    )}
+                                  </div>
                                 </div>
                               ))
                             }
@@ -2254,14 +2550,11 @@ export default function App() {
                   <Card style={{ overflow: "hidden" }}>
                     <div style={{ padding: isMobile ? "12px 16px" : "16px 22px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: isMobile ? 6 : 0 }}>
                       <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: isMobile ? 14 : 15 }}>Registro de Donaciones</div>
-                      <div style={{ fontSize: isMobile ? 10 : 12, color: T.textMuted, display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.textMuted, display: "inline-block" }} />
-                        Solo lectura
-                      </div>
                     </div>
                     <div style={{ overflowX: "auto" }}>
                       <table style={{ width: "100%", borderCollapse: "collapse", minWidth: isMobile ? 600 : "100%" }}>
                         <thead>
+                          
                           <tr style={{ background: T.bgSoft }}>
                             {["Donante", "Relación", "Beneficiario", "Monto", "Fecha", "Tipo", "Proyecto"].map(h => (
                               <th key={h} style={{ padding: isMobile ? "8px 12px" : "11px 16px", textAlign: "left", fontSize: isMobile ? 9 : 10.5, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
@@ -2283,7 +2576,18 @@ export default function App() {
                                 <td style={{ padding: isMobile ? "8px 12px" : "12px 16px", fontSize: isMobile ? 11 : 12, color: T.textMuted, whiteSpace: "nowrap" }}>{fmtD(d.fecha)}</td>
                                 <td style={{ padding: isMobile ? "8px 12px" : "12px 16px", fontSize: isMobile ? 11 : 12 }}>{d.tipo}</td>
                                 <td style={{ padding: isMobile ? "8px 12px" : "12px 16px", fontSize: isMobile ? 11 : 12, color: T.textMuted, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{proj ? proj.nombre : "–"}</td>
+                                <td style={{ padding: isMobile ? "8px 12px" : "12px 16px" }}>
+                                  <div style={{ display: "flex", gap: "6px" }}>
+                                    {can(currentUser, "donations_edit") && (
+                                      <button onClick={() => { setEditDonation(d); setDonModal(true); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.primary, fontSize: 16 }}>✏️</button>
+                                    )}
+                                    {can(currentUser, "donations_del") && (
+                                      <button onClick={() => delDon(d.id)} style={{ background: "none", border: "none", cursor: "pointer", color: T.red, fontSize: 16 }}>🗑</button>
+                                    )}
+                                  </div>
+                                </td>
                               </tr>
+                              
                             );
                           })}
                         </tbody>
@@ -2521,9 +2825,17 @@ export default function App() {
       {patModal && <Modal title={patModal === "new" ? "Registrar Nuevo Beneficiario" : "Editar Beneficiario"} subtitle="Fundación Crescendo" onClose={() => setPatModal(null)} wide>
         <PatientForm init={patModal !== "new" ? patModal : null} onSave={savePat} onClose={() => setPatModal(null)} />
       </Modal>}
-      {donModal && <Modal title="Registrar Donación" subtitle="Los registros de donaciones son permanentes" onClose={() => setDonModal(false)}>
-        <DonationForm onSave={saveDon} onClose={() => setDonModal(false)} beneficiaries={beneficiaries} projects={projects} />
-      </Modal>}
+      {donModal && (
+        <Modal title={editDonation ? "Editar Donación" : "Registrar Donación"} subtitle="Los registros de donaciones son permanentes" onClose={() => { setDonModal(false); setEditDonation(null); }}>
+          <DonationForm
+            init={editDonation}
+            onSave={saveDon}
+            onClose={() => { setDonModal(false); setEditDonation(null); }}
+            beneficiaries={beneficiaries}
+            projects={projects}
+          />
+        </Modal>
+      )}
       {projModal && <Modal title={projModal === "new" ? "Nuevo Proyecto" : "Editar Proyecto"} onClose={() => setProjModal(null)} wide>
         <ProjectForm init={projModal !== "new" ? projModal : null} onSave={saveProj} onClose={() => setProjModal(null)} beneficiaries={beneficiaries} />
       </Modal>}
